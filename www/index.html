@@ -2,12 +2,30 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="stylesheet" href="/css/bootstrap.min.css">
 
 	<title>A website</title>
 </head>
 <body>
-	<h1>Work in progress</h1>
-	<p>Update?</p>
+	<div class="container">
+		<h1>Work in progress</h1>
+		<p>Update?</p>
+		<form>
+			<div class="form-group">
+				<label for="title">Title</label>
+				<input type="text" class="form-control" id="title">
+			</div>
+			<div class="form-group">
+				<label for="Points">Points</label>
+				<input type="number" class="form-control" id="points" min="1">
+			</div>
+			<button type="submit" class="btn btn-primary">Save</button>
+		</form>
+	</div>
+
+	<script type='text/javascript' src='/js/lib/bootstrap.bundle.min.js'></script>
+	<script type='text/javascript' src='/js/lib/knockout-3.5.1.js'></script>
+	<script type='text/javascript' src='/js/lib/knockout.mapping-latest.js'></script>
 </body>
 </html>
