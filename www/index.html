@@ -23,12 +23,20 @@
 			<button type="button" class="btn btn-primary" data-bind="click: save">Save</button>
 		</form>
 		<p>Summary: <strong data-bind="text: summary"></strong></p>
+		<ul data-bind="foreach: backlog.stories">
+		    <li>
+		        <div>
+		            <span data-bind="text: title"> </span> Points: <span data-bind='text: points'>&nbsp;</span>
+		        </div>
+		    </li>
+		</ul>
 	</div>
 
 	<script type='text/javascript' src='/js/lib/jquery-3.5.1.min.js'></script>
 	<script type='text/javascript' src='/js/lib/bootstrap.bundle.min.js'></script>
 	<script type='text/javascript' src='/js/lib/knockout-3.5.1.js'></script>
 	<script type='text/javascript' src='/js/lib/knockout.mapping-latest.js'></script>
+	<script type='text/javascript' src='/js/backend/backend.js'></script>
 	<script type='text/javascript' src='/js/backlog.js'></script>
 </body>
 </html>

@@ -1,4 +1,6 @@
 function BacklogViewModel() {
+	this.backlog = ko.mapping.fromJS(backend.loadBacklog());
+
 	this.story = {
 		title: ko.observable(""),
 		points: ko.observable(5)
@@ -9,8 +11,9 @@ function BacklogViewModel() {
 	}, this);
 
 	this.save = function() {
-		var storydata = ko.mapping.toJS(this.story);
-		console.log(storydata);
+		var story = ko.mapping.toJS(this.story);
+		backend.saveStory(story);
+		ko.mapping.fromJS(backend.loadBacklog(), this.backlog);
 	};
 }
 
