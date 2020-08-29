@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"anders andersson"
+	],
+	"copyright": "Copyright © 2020, anders andersson",
+	"description": "A minimal D application.",
+	"license": "MIT",
+	"name": "httpapi",
+	"dependencies": {
+		"vibe-d": "~>0.9.1"
+	}
+}

@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/httpapi
+httpapi.so
+httpapi.dylib
+httpapi.dll
+httpapi.a
+httpapi.lib
+httpapi-test-*
+*.exe
+*.o
+*.obj
+*.lst
