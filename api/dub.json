@@ -8,5 +8,5 @@
 	},
 	"description": "A minimal D application.",
 	"license": "MIT",
-	"name": "api"
+	"name": "api",
 }

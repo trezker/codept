@@ -10,3 +10,7 @@ services:
       - ./dev.conf:/etc/nginx/conf.d/default.conf
       - ./ssl/cert.pem:/etc/nginx/conf.d/cert.pem
       - ./ssl/key.pem:/etc/nginx/conf.d/key.pem
+  api:
+    build: ./api
+    ports:
+      - 8080:8080
