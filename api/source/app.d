@@ -5,6 +5,10 @@ import std.stdio;
 class API {
 	Storage storage;
 public:
+	this() {
+		storage = new Storage;
+	}
+
 	void SaveStory(Story story) {
 		storage.SaveStory(story);
 	}
@@ -17,19 +21,23 @@ public:
 class HTTPAPI {
 	API api;
 public:
+	this() {
+		api = new API;
+	}
+
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
-		//Story story;
-		//api.SaveStory(story);
+		Story story;
+		api.SaveStory(story);
 		Json json = Json.emptyObject;
 		json["success"] = true;
 		res.writeBody(serializeToJsonString(json), 200);
 	}
 
 	void LoadBacklog(HTTPServerRequest req, HTTPServerResponse res) {
-		//auto backlog = api.LoadBacklog();
+		auto backlog = api.LoadBacklog();
 		Json json = Json.emptyObject;
 		json["success"] = true;
-		//json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
+		json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
 		res.writeBody(serializeToJsonString(json), 200);
 	}
 };
@@ -50,6 +58,7 @@ void main()
 	router.get("/", &index);
 	router.get("/api/test", &index);
 	router.post("/api/savestory", &httpapi.SaveStory);
+	router.post("/api/loadbacklog", &httpapi.LoadBacklog);
 
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;
