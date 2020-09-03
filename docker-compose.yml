@@ -11,6 +11,8 @@ services:
       - ./ssl/cert.pem:/etc/nginx/conf.d/cert.pem
       - ./ssl/key.pem:/etc/nginx/conf.d/key.pem
   api:
-    build: ./api
+    build: ./apidocker
     ports:
       - 8080:8080
+    volumes:
+      - ./api/api:/api

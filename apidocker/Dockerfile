@@ -9,8 +9,6 @@ RUN apt-get update \
  && apt-get clean && rm -rf /var/lib/apt/lists/* /var/cache/apt \
  && dub upgrade
 
-COPY api /
-
 USER nobody
 
 ENTRYPOINT ["/api"]

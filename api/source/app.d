@@ -1,5 +1,6 @@
 import vibe.vibe;
 import codept.storage;
+import std.stdio;
 
 class API {
 	Storage storage;
@@ -17,18 +18,18 @@ class HTTPAPI {
 	API api;
 public:
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
-		Story story;
-		api.SaveStory(story);
+		//Story story;
+		//api.SaveStory(story);
 		Json json = Json.emptyObject;
 		json["success"] = true;
 		res.writeBody(serializeToJsonString(json), 200);
 	}
 
 	void LoadBacklog(HTTPServerRequest req, HTTPServerResponse res) {
-		auto backlog = api.LoadBacklog();
+		//auto backlog = api.LoadBacklog();
 		Json json = Json.emptyObject;
 		json["success"] = true;
-		json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
+		//json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
 		res.writeBody(serializeToJsonString(json), 200);
 	}
 };
@@ -42,10 +43,12 @@ void index(HTTPServerRequest req, HTTPServerResponse res)
 
 void main()
 {
+	writeln("New version");
 	HTTPAPI httpapi = new HTTPAPI;
 
 	auto router = new URLRouter;
 	router.get("/", &index);
+	router.get("/api/test", &index);
 	router.post("/api/savestory", &httpapi.SaveStory);
 
 	auto settings = new HTTPServerSettings;
