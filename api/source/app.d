@@ -27,6 +27,9 @@ public:
 
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
 		Story story;
+		story.title = req.json["title"].to!string;
+		story.points = req.json["points"].to!int;
+
 		api.SaveStory(story);
 		Json json = Json.emptyObject;
 		json["success"] = true;
@@ -51,7 +54,6 @@ void index(HTTPServerRequest req, HTTPServerResponse res)
 
 void main()
 {
-	writeln("New version");
 	HTTPAPI httpapi = new HTTPAPI;
 
 	auto router = new URLRouter;

@@ -18,12 +18,7 @@ function apicall(url, data) {
 }
 
 function Backend () {
-	this.backlog = {
-		stories: []
-	};
-
 	this.saveStory = function(story) {
-		this.backlog.stories.push(story);
 		return apicall('api/savestory', story);
 	};
 
