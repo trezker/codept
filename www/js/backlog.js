@@ -12,6 +12,7 @@ function BacklogViewModel() {
 	this.refreshBacklog();
 
 	this.story = {
+		id: ko.observable(0),
 		title: ko.observable(""),
 		points: ko.observable(5)
 	};

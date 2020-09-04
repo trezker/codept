@@ -27,6 +27,7 @@ public:
 
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
 		Story story;
+		story.id = req.json["id"].to!int;
 		story.title = req.json["title"].to!string;
 		story.points = req.json["points"].to!int;
 
