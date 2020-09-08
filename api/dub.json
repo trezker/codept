@@ -4,9 +4,10 @@
 	],
 	"copyright": "Copyright © 2020, anders andersson",
 	"dependencies": {
+		"mysql-d": "~>0.3.3",
 		"vibe-d": "~>0.9.1"
 	},
 	"description": "A minimal D application.",
 	"license": "MIT",
-	"name": "api",
+	"name": "api"
 }

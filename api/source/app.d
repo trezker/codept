@@ -1,6 +1,8 @@
 import vibe.vibe;
 import codept.storage;
 import std.stdio;
+import std.file;
+import mysql.d;
 
 class API {
 	Storage storage;
@@ -55,6 +57,23 @@ void index(HTTPServerRequest req, HTTPServerResponse res)
 
 void main()
 {
+	string dburl;
+	string dbpassword;
+	auto file = File(".env");
+	auto range = file.byLine();
+	foreach (line; range)
+	{
+		auto keyval = line.split("=");
+		if(keyval[0]=="DB_CODEPT_PASSWORD") {
+			dbpassword = keyval[1].idup();
+		}
+		if(keyval[0]=="DB_URL") {
+			dburl = keyval[1].idup();
+		}
+	}
+
+    auto mysql = new Mysql(dburl, 3306, "codept", dbpassword, "codept");
+
 	HTTPAPI httpapi = new HTTPAPI;
 
 	auto router = new URLRouter;

@@ -1,5 +1,6 @@
 module codept.storage;
 import std.algorithm;
+import mysql.d;
 
 struct Story {
 	int id;
