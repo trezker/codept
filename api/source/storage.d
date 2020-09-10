@@ -39,11 +39,11 @@ public:
 	}
 
 	void Reset() {
-
+		mysql.query("truncate story;");
 	}
 
 	void Dismantle() {
-
+		mysql.query("drop table story;");
 	}
 
 	void SaveStory(Story story) {
@@ -71,21 +71,35 @@ public:
 
 class StorageTest {
 public:
+	Storage storage;
+
 	void Run() {
 		MysqlParams params;
-		Storage storage =  new Storage(params);
+		params.url = "test.local";
+		params.port = "3306";
+		params.database = "codept_test";
+		params.user = "codept_test";
+		params.password="pQoMU4YcckuW23V5";
+
+		storage =  new Storage(params);
 		storage.Prepare();
+
+		try {
+			Test1();
+			storage.Reset();
+		}
+		catch(Exception e) {
+			writeln(e);
+		}
+
+		storage.Dismantle();
+	}
+
+	void Test1() {
+		assert(0 == storage.LoadBacklog().length);
 	}
 };
 
-unittest {
-	auto storagetest = new StorageTest;
-	storagetest.Run();
-/*
-	Storage storage = new Storage;
-	assert(0 == storage.LoadBacklog().length);
-	*/
-}
 /*
 unittest {
 	Storage storage = new Storage;
