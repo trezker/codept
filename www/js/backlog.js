@@ -1,32 +1,39 @@
 function BacklogViewModel() {
-	this.backlog = ko.mapping.fromJS({
+	var self = this;
+
+	self.backlog = ko.mapping.fromJS({
 		stories: []
 	});
 
-	this.refreshBacklog = function() {
+	self.refreshBacklog = function() {
 		backend.loadBacklog()
 		.then(data => {
-			ko.mapping.fromJS({stories: data.backlog}, this.backlog);
+			ko.mapping.fromJS({stories: data.backlog}, self.backlog);
 		});
 	};
-	this.refreshBacklog();
+	self.refreshBacklog();
 
-	this.story = {
-		id: ko.observable(0),
-		title: ko.observable(""),
-		points: ko.observable(5)
-	};
+	self.story = ko.mapping.fromJS({
+		id: 0,
+		title: "",
+		points: 5
+	});
 
-	this.summary = ko.computed(function() {
-		return this.story.title() + ": " + this.story.points() + " points";
-	}, this);
+	self.summary = ko.computed(function() {
+		return self.story.title() + ": " + self.story.points() + " points";
+	}, self);
 
-	this.save = function() {
-		var story = ko.mapping.toJS(this.story);
+	self.save = function() {
+		var story = ko.mapping.toJS(self.story);
 		backend.saveStory(story)
 		.then(data => {
-			this.refreshBacklog();
+			self.refreshBacklog();
 		});
+	};
+
+	self.editStory = function(story) {
+		var jsStory = ko.mapping.toJS(story);
+		ko.mapping.fromJS(jsStory, self.story);
 	};
 }
 

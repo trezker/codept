@@ -25,7 +25,7 @@
 		<p>Summary: <strong data-bind="text: summary"></strong></p>
 		<ul data-bind="foreach: backlog.stories">
 		    <li>
-		        <div>
+		        <div data-bind="click: $root.editStory">
 		            <span data-bind="text: title"> </span> Points: <span data-bind='text: points'>&nbsp;</span>
 		        </div>
 		    </li>
