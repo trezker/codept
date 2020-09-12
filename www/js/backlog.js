@@ -37,7 +37,11 @@ function BacklogViewModel() {
 	};
 
 	self.cancelStory = function(story) {
-		console.log("Cancel");
+		var story = ko.mapping.toJS(story);
+		backend.cancelStory(story)
+		.then(data => {
+			self.refreshBacklog();
+		});
 	};
 }
 

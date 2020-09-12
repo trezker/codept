@@ -25,6 +25,10 @@ function Backend () {
 	this.loadBacklog = function(cb) {
 		return apicall('api/loadbacklog', {});
 	};
+
+	this.cancelStory = function(story) {
+		return apicall('api/cancelstory', {"id": story.id});
+	};
 };
 
 var backend = new Backend();
