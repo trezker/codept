@@ -39,6 +39,10 @@ public:
 	Story[] LoadBacklog() {
 		return storage.LoadBacklog();
 	}
+
+	void CancelStory(int id) {
+		storage.CancelStory(id);
+	}
 };
 
 class HTTPAPI {
@@ -67,6 +71,15 @@ public:
 		json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
 		res.writeBody(serializeToJsonString(json), 200);
 	}
+
+	void CancelStory(HTTPServerRequest req, HTTPServerResponse res) {
+		int id = req.json["id"].to!int;
+
+		api.CancelStory(id);
+		Json json = Json.emptyObject;
+		json["success"] = true;
+		res.writeBody(serializeToJsonString(json), 200);
+	}
 };
 
 void index(HTTPServerRequest req, HTTPServerResponse res)
@@ -85,6 +98,7 @@ void main()
 	router.get("/api/test", &index);
 	router.post("/api/savestory", &httpapi.SaveStory);
 	router.post("/api/loadbacklog", &httpapi.LoadBacklog);
+	router.post("/api/cancelstory", &httpapi.CancelStory);
 
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;
