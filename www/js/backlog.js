@@ -35,6 +35,10 @@ function BacklogViewModel() {
 		var jsStory = ko.mapping.toJS(story);
 		ko.mapping.fromJS(jsStory, self.story);
 	};
+
+	self.cancelStory = function(story) {
+		console.log("Cancel");
+	};
 }
 
 ko.applyBindings(new BacklogViewModel());

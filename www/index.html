@@ -23,13 +23,22 @@
 			<button type="button" class="btn btn-primary" data-bind="click: save">Save</button>
 		</form>
 		<p>Summary: <strong data-bind="text: summary"></strong></p>
-		<ul data-bind="foreach: backlog.stories">
-		    <li>
-		        <div data-bind="click: $root.editStory">
-		            <span data-bind="text: title"> </span> Points: <span data-bind='text: points'>&nbsp;</span>
-		        </div>
-		    </li>
-		</ul>
+		<table data-bind="foreach: backlog.stories">
+			<tr>
+				<td>
+					<button type="button" class="btn btn-primary" data-bind="click: $root.editStory">Edit</button>
+				</td>
+				<td>
+					<button type="button" class="btn btn-primary" data-bind="click: $root.cancelStory">Cancel</button>
+				</td>
+				<td>
+					<span data-bind="text: title"> </span>
+				</td>
+				<td>
+					Points: <span data-bind='text: points'>&nbsp;</span>
+				</td>
+			</tr>
+		</table>
 	</div>
 
 	<script type='text/javascript' src='/js/lib/jquery-3.5.1.min.js'></script>
