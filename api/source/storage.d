@@ -33,7 +33,8 @@ public:
 			CREATE TABLE `story` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`title` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,
-				`points` int(11) NOT NULL
+				`points` int(11) NOT NULL,
+				`cancelled` DATETIME
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 	}
@@ -57,7 +58,7 @@ public:
 
 	Story[] LoadBacklog() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, title, points from story;");
+		auto rows = mysql.query("select ID, title, points from story where cancelled is NULL;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
@@ -66,6 +67,10 @@ public:
 			stories ~= story;
 		}
     	return stories;
+	}
+
+	void CancelStory(int id) {
+		mysql.query("update story set cancelled=NOW() where ID=?;", id);
 	}
 };
 
@@ -90,6 +95,8 @@ public:
 			Test2();
 			storage.Reset();
 			Test3();
+			storage.Reset();
+			Test4();
 			storage.Reset();
 		}
 		catch(Exception e) {
@@ -125,6 +132,14 @@ public:
 		storage.SaveStory(storyUpdate);
 		assert(2 == storage.LoadBacklog().length);
 		assert("Updated" == storage.LoadBacklog()[0].title);
+	}
+
+	void Test4() {
+		Story story;
+		storage.SaveStory(story);
+		Story[] backlog = storage.LoadBacklog();
+		storage.CancelStory(backlog[0].id);
+		assert(0 == storage.LoadBacklog().length);
 	}
 };
 
