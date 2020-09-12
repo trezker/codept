@@ -29,6 +29,10 @@ function Backend () {
 	this.cancelStory = function(story) {
 		return apicall('api/cancelstory', {"id": story.id});
 	};
+
+	this.doneStory = function(story) {
+		return apicall('api/donestory', {"id": story.id});
+	};
 };
 
 var backend = new Backend();

@@ -43,6 +43,10 @@ public:
 	void CancelStory(int id) {
 		storage.CancelStory(id);
 	}
+
+	void DoneStory(int id) {
+		storage.DoneStory(id);
+	}
 };
 
 class HTTPAPI {
@@ -80,6 +84,15 @@ public:
 		json["success"] = true;
 		res.writeBody(serializeToJsonString(json), 200);
 	}
+
+	void DoneStory(HTTPServerRequest req, HTTPServerResponse res) {
+		int id = req.json["id"].to!int;
+
+		api.DoneStory(id);
+		Json json = Json.emptyObject;
+		json["success"] = true;
+		res.writeBody(serializeToJsonString(json), 200);
+	}
 };
 
 void index(HTTPServerRequest req, HTTPServerResponse res)
@@ -99,6 +112,7 @@ void main()
 	router.post("/api/savestory", &httpapi.SaveStory);
 	router.post("/api/loadbacklog", &httpapi.LoadBacklog);
 	router.post("/api/cancelstory", &httpapi.CancelStory);
+	router.post("/api/donestory", &httpapi.DoneStory);
 
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;

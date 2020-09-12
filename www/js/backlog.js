@@ -43,6 +43,14 @@ function BacklogViewModel() {
 			self.refreshBacklog();
 		});
 	};
+
+	self.doneStory = function(story) {
+		var story = ko.mapping.toJS(story);
+		backend.doneStory(story)
+		.then(data => {
+			self.refreshBacklog();
+		});
+	};
 }
 
 ko.applyBindings(new BacklogViewModel());
