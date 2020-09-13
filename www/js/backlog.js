@@ -13,17 +13,20 @@ function BacklogViewModel() {
 	};
 	self.refreshBacklog();
 
-	self.story = ko.mapping.fromJS({
+	self.newStory = {
 		id: 0,
 		title: "",
 		points: 5
-	});
+	};
+
+	self.story = ko.mapping.fromJS(self.newStory);
 
 	self.save = function() {
 		var story = ko.mapping.toJS(self.story);
 		backend.saveStory(story)
 		.then(data => {
 			self.refreshBacklog();
+			ko.mapping.fromJS(self.newStory, self.story);
 		});
 	};
 
