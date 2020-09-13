@@ -19,10 +19,6 @@ function BacklogViewModel() {
 		points: 5
 	});
 
-	self.summary = ko.computed(function() {
-		return self.story.title() + ": " + self.story.points() + " points";
-	}, self);
-
 	self.save = function() {
 		var story = ko.mapping.toJS(self.story);
 		backend.saveStory(story)

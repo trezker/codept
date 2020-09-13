@@ -9,39 +9,52 @@
 </head>
 <body>
 	<div class="container">
-		<h1>Work in progress</h1>
-		<p>Update?</p>
-		<form>
-			<div class="form-group">
-				<label for="title">Title</label>
-				<input type="text" class="form-control" id="title" data-bind="value: story.title">
-			</div>
-			<div class="form-group">
-				<label for="Points">Points</label>
-				<input type="number" class="form-control" id="points" min="1" data-bind="value: story.points">
-			</div>
-			<button type="button" class="btn btn-primary" data-bind="click: save">Save</button>
-		</form>
-		<p>Summary: <strong data-bind="text: summary"></strong></p>
-		<table data-bind="foreach: backlog.stories">
-			<tr>
-				<td>
-					<button type="button" class="btn btn-primary" data-bind="click: $root.editStory">Edit</button>
-				</td>
-				<td>
-					<button type="button" class="btn btn-primary" data-bind="click: $root.cancelStory">Cancel</button>
-				</td>
-				<td>
-					<button type="button" class="btn btn-primary" data-bind="click: $root.doneStory">Done</button>
-				</td>
-				<td>
-					<span data-bind="text: title"> </span>
-				</td>
-				<td>
-					Points: <span data-bind='text: points'>&nbsp;</span>
-				</td>
-			</tr>
-		</table>
+		<h1>Agile</h1>
+		<div style="margin: 1em;">
+			<form>
+				<div class="form-group">
+					<label for="title">Title</label>
+					<input type="text" class="form-control" id="title" data-bind="value: story.title">
+				</div>
+				<div class="form-group">
+					<label for="Points">Points</label>
+					<input type="number" class="form-control" id="points" min="1" data-bind="value: story.points">
+				</div>
+				<button type="button" class="btn btn-primary" data-bind="click: save">Save</button>
+			</form>
+		</div>
+		<ul class="nav nav-tabs">
+			<li class="nav-item">
+				<a class="nav-link active" href="#">Backlog</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Done</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Cancelled</a>
+			</li>
+		</ul>
+		<div style="margin: 1em;">
+			<table data-bind="foreach: backlog.stories">
+				<tr>
+					<td>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.editStory">Edit</button>
+					</td>
+					<td>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.cancelStory">Cancel</button>
+					</td>
+					<td>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.doneStory">Done</button>
+					</td>
+					<td>
+						<span data-bind="text: title"> </span>
+					</td>
+					<td>
+						Points: <span data-bind='text: points'>&nbsp;</span>
+					</td>
+				</tr>
+			</table>
+		</div>
 	</div>
 
 	<script type='text/javascript' src='/js/lib/jquery-3.5.1.min.js'></script>
