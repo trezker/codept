@@ -9,6 +9,13 @@ function BacklogViewModel() {
 	self.storyTab = ko.observable("backlog");
 
 	self.selectStoryTab = function(tab) {
+		if(tab.value == 'backlog')
+			self.refreshBacklog();
+		if(tab.value == 'done')
+			self.refreshDone();
+		if(tab.value == 'cancelled')
+			self.refreshCancelled();
+
 		self.storyTab(tab.value);
 	};
 
