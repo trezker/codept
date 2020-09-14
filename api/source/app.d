@@ -40,6 +40,14 @@ public:
 		return storage.LoadBacklog();
 	}
 
+	Story[] CancelledStories() {
+		return storage.CancelledStories();
+	}
+
+	Story[] DoneStories() {
+		return storage.DoneStories();
+	}
+
 	void CancelStory(int id) {
 		storage.CancelStory(id);
 	}
@@ -73,6 +81,22 @@ public:
 		Json json = Json.emptyObject;
 		json["success"] = true;
 		json["backlog"] = serialize!(JsonSerializer, Story[])(backlog);
+		res.writeBody(serializeToJsonString(json), 200);
+	}
+
+	void CancelledStories(HTTPServerRequest req, HTTPServerResponse res) {
+		auto stories = api.CancelledStories();
+		Json json = Json.emptyObject;
+		json["success"] = true;
+		json["stories"] = serialize!(JsonSerializer, Story[])(stories);
+		res.writeBody(serializeToJsonString(json), 200);
+	}
+
+	void DoneStories(HTTPServerRequest req, HTTPServerResponse res) {
+		auto stories = api.DoneStories();
+		Json json = Json.emptyObject;
+		json["success"] = true;
+		json["stories"] = serialize!(JsonSerializer, Story[])(stories);
 		res.writeBody(serializeToJsonString(json), 200);
 	}
 
@@ -113,6 +137,8 @@ void main()
 	router.post("/api/loadbacklog", &httpapi.LoadBacklog);
 	router.post("/api/cancelstory", &httpapi.CancelStory);
 	router.post("/api/donestory", &httpapi.DoneStory);
+	router.post("/api/cancelledstories", &httpapi.CancelledStories);
+	router.post("/api/donestories", &httpapi.DoneStories);
 
 	auto settings = new HTTPServerSettings;
 	settings.port = 8080;

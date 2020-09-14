@@ -1,7 +1,26 @@
 function BacklogViewModel() {
 	var self = this;
 
+	self.storyTabs = ko.observableArray([
+		{title: 'Backlog', value: 'backlog'},
+		{title: 'Done', value: 'done'},
+		{title: 'Cancelled', value: 'cancelled'}
+	]);
+	self.storyTab = ko.observable("backlog");
+
+	self.selectStoryTab = function(tab) {
+		self.storyTab(tab.value);
+	};
+
 	self.backlog = ko.mapping.fromJS({
+		stories: []
+	});
+
+	self.cancelled = ko.mapping.fromJS({
+		stories: []
+	});
+
+	self.done = ko.mapping.fromJS({
 		stories: []
 	});
 
@@ -12,6 +31,22 @@ function BacklogViewModel() {
 		});
 	};
 	self.refreshBacklog();
+
+	self.refreshCancelled = function() {
+		backend.cancelledStories()
+		.then(data => {
+			ko.mapping.fromJS({stories: data.stories}, self.cancelled);
+		});
+	};
+	self.refreshCancelled();
+
+	self.refreshDone = function() {
+		backend.doneStories()
+		.then(data => {
+			ko.mapping.fromJS({stories: data.stories}, self.done);
+		});
+	};
+	self.refreshDone();
 
 	self.newStory = {
 		id: 0,

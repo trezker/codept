@@ -67,7 +67,33 @@ public:
 			story.points = to!int(row["points"]);
 			stories ~= story;
 		}
-    	return stories;
+		return stories;
+	}
+
+	Story[] CancelledStories() {
+		Story[] stories;
+		auto rows = mysql.query("select ID, title, points from story where cancelled is NOT NULL;");
+		foreach (row; rows) {
+			Story story;
+			story.id = to!int(row["ID"]);
+			story.title = row["title"];
+			story.points = to!int(row["points"]);
+			stories ~= story;
+		}
+		return stories;
+	}
+
+	Story[] DoneStories() {
+		Story[] stories;
+		auto rows = mysql.query("select ID, title, points from story where done is NOT NULL;");
+		foreach (row; rows) {
+			Story story;
+			story.id = to!int(row["ID"]);
+			story.title = row["title"];
+			story.points = to!int(row["points"]);
+			stories ~= story;
+		}
+		return stories;
 	}
 
 	void CancelStory(int id) {
@@ -95,15 +121,15 @@ public:
 		storage.Prepare();
 
 		try {
-			Test1();
+			Backlog_empty_at_start();
 			storage.Reset();
-			Test2();
+			Saved_story_shows_up_in_backlog();
 			storage.Reset();
-			Test3();
+			Story_can_be_updated();
 			storage.Reset();
-			Test4();
+			Cancelled_story_is_removed_from_backlog();
 			storage.Reset();
-			Test5();
+			Done_story_is_removed_from_backlog();
 			storage.Reset();
 		}
 		catch(Exception e) {
@@ -114,17 +140,17 @@ public:
 		}
 	}
 
-	void Test1() {
+	void Backlog_empty_at_start() {
 		assert(0 == storage.LoadBacklog().length);
 	}
 
-	void Test2() {
+	void Saved_story_shows_up_in_backlog() {
 		Story story;
 		storage.SaveStory(story);
 		assert(1 == storage.LoadBacklog().length);
 	}
 
-	void Test3() {
+	void Story_can_be_updated() {
 		Story story;
 		story.id = 0;
 		storage.SaveStory(story);
@@ -142,20 +168,22 @@ public:
 		assert("Updated" == storage.LoadBacklog()[0].title);
 	}
 
-	void Test4() {
+	void Cancelled_story_is_removed_from_backlog() {
 		Story story;
 		storage.SaveStory(story);
 		Story[] backlog = storage.LoadBacklog();
 		storage.CancelStory(backlog[0].id);
 		assert(0 == storage.LoadBacklog().length);
+		assert(1 == storage.CancelledStories().length);
 	}
 
-	void Test5() {
+	void Done_story_is_removed_from_backlog() {
 		Story story;
 		storage.SaveStory(story);
 		Story[] backlog = storage.LoadBacklog();
 		storage.DoneStory(backlog[0].id);
 		assert(0 == storage.LoadBacklog().length);
+		assert(1 == storage.DoneStories().length);
 	}
 };
 

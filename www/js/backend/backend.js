@@ -26,6 +26,14 @@ function Backend () {
 		return apicall('api/loadbacklog', {});
 	};
 
+	this.cancelledStories = function(cb) {
+		return apicall('api/cancelledstories', {});
+	};
+
+	this.doneStories = function(cb) {
+		return apicall('api/donestories', {});
+	};
+
 	this.cancelStory = function(story) {
 		return apicall('api/cancelstory', {"id": story.id});
 	};
