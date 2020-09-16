@@ -58,7 +58,8 @@ function BacklogViewModel() {
 	self.newStory = {
 		id: 0,
 		title: "",
-		points: 5
+		points: 5,
+		value: 5
 	};
 
 	self.story = ko.mapping.fromJS(self.newStory);
