@@ -58,7 +58,7 @@ function BacklogViewModel() {
 	self.newStory = {
 		id: 0,
 		title: "",
-		points: 5,
+		cost: 5,
 		value: 5
 	};
 

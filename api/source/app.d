@@ -68,7 +68,7 @@ public:
 		Story story;
 		story.id = req.json["id"].to!int;
 		story.title = req.json["title"].to!string;
-		story.points = req.json["points"].to!int;
+		story.cost = req.json["cost"].to!int;
 		story.value = req.json["value"].to!int;
 
 		api.SaveStory(story);
