@@ -61,7 +61,11 @@ public:
 
 	Story[] LoadBacklog() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, title, cost, value from story where cancelled is NULL and done is NULL;");
+		auto rows = mysql.query("
+			select ID, title, cost, value
+			from story
+			where cancelled is NULL and done is NULL
+			order by value-cost desc;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
