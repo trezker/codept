@@ -16,13 +16,14 @@ struct Story {
 };
 
 struct User {
+	int id;
 	string name;
 	string password;
 };
 
 struct Session {
-	int ID;
-	int userID;
+	int id;
+	int userid;
 	string sessionid;
 };
 
@@ -150,13 +151,25 @@ public:
 		mysql.query("insert into user(name, password) values(?, ?);", user.name, hashedPassword);
 	}
 
+	User LoadUser(int id) {
+		auto rows = mysql.query("select ID, name from user where ID=?;", id);
+		User user;
+		foreach(row; rows) {
+			user.id = to!int(row["ID"]);
+			user.name = row["name"];
+			break;
+		}
+		return user;
+	}
+
 	string Login(User user) {
 		auto rows = mysql.query("select ID, password from user where name=?;", user.name);
 		foreach (row; rows) {
 			string hashedPassword = row["password"];
 			if(isSameHash(dupPassword(user.password), parseHash(hashedPassword))) {
-				//Create session
-				return "session";
+				string sessionid = randomToken();
+				mysql.query("insert into session(userid, sessionid) values(?, ?);", row["ID"], sessionid);
+				return sessionid;
 			}
 			return "";
 		}
@@ -167,8 +180,8 @@ public:
 		auto rows = mysql.query("select ID, userID, sessionid from session where sessionid=?;", sessionid);
 		Session session;
 		foreach (row; rows) {
-			session.ID = to!int(row["ID"]);
-			session.userID = to!int(row["userID"]);
+			session.id = to!int(row["ID"]);
+			session.userid = to!int(row["userID"]);
 			session.sessionid = row["sessionid"];
 			return session;
 		}
@@ -284,13 +297,29 @@ public:
 			assert("" == sessionid);
 		};
 
-		tests["After login, session should contain username"] = function(Storage storage) {
+		tests["After login, session should contain correct user"] = function(Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
 			storage.CreateUser(user);
 			string sessionid = storage.Login(user);
 			Session session = storage.LoadSession(sessionid);
+			User sessionuser = storage.LoadUser(session.userid);
+			assert(user.name == sessionuser.name);
+		};
+
+		tests["Multiple logins should not get the same sessionid"] = function(Storage storage) {
+			User user1;
+			user1.name = "some1";
+			user1.password = "password1";
+			storage.CreateUser(user1);
+			User user2;
+			user2.name = "some2";
+			user2.password = "password2";
+			storage.CreateUser(user2);
+			string sessionid1 = storage.Login(user1);
+			string sessionid2 = storage.Login(user2);
+			assert(sessionid1 != sessionid2);
 		};
 		return tests;
 	}
