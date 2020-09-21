@@ -52,11 +52,20 @@ public:
 				`done` DATETIME
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
+
 		mysql.query("
 			CREATE TABLE `user` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-				`password` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL
+				`password` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
+			CREATE TABLE `session` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`userID` bigint(20) NOT NULL,
+				`sessionid` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 	}
@@ -64,11 +73,13 @@ public:
 	void Reset() {
 		mysql.query("truncate story;");
 		mysql.query("truncate user;");
+		mysql.query("truncate session;");
 	}
 
 	void Dismantle() {
 		mysql.query("drop table story;");
 		mysql.query("drop table user;");
+		mysql.query("drop table session;");
 	}
 
 	void SaveStory(Story story) {
@@ -136,7 +147,7 @@ public:
 
 	void CreateUser(User user) {
 		string hashedPassword = makeHash(dupPassword(user.password)).toString();
-		mysql.query("insert into user(name, password);", user.name, hashedPassword);
+		mysql.query("insert into user(name, password) values(?, ?);", user.name, hashedPassword);
 	}
 
 	string Login(User user) {
@@ -245,6 +256,41 @@ public:
 			storage.DoneStory(backlog[0].id);
 			assert(0 == storage.LoadBacklog().length);
 			assert(1 == storage.DoneStories().length);
+		};
+
+		tests["Login to wrong account fails"] = function(Storage storage) {
+			User user;
+			user.name = "nobody";
+			string sessionid = storage.Login(user);
+			assert("" == sessionid);
+		};
+
+		tests["Login with correct name and password works"] = function(Storage storage) {
+			User user;
+			user.name = "somebody";
+			user.password = "password";
+			storage.CreateUser(user);
+			string sessionid = storage.Login(user);
+			assert("" != sessionid);
+		};
+
+		tests["Login with correct name but wrong password fails"] = function(Storage storage) {
+			User user;
+			user.name = "somebody";
+			user.password = "password";
+			storage.CreateUser(user);
+			user.password = "wrongpassword";
+			string sessionid = storage.Login(user);
+			assert("" == sessionid);
+		};
+
+		tests["After login, session should contain username"] = function(Storage storage) {
+			User user;
+			user.name = "somebody";
+			user.password = "password";
+			storage.CreateUser(user);
+			string sessionid = storage.Login(user);
+			Session session = storage.LoadSession(sessionid);
 		};
 		return tests;
 	}
