@@ -4,6 +4,7 @@
 	],
 	"copyright": "Copyright © 2020, anders andersson",
 	"dependencies": {
+		"dauth": "~>0.6.4",
 		"mysql-d": "~>0.3.3",
 		"vibe-d": "~>0.9.1"
 	},

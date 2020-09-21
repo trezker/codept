@@ -6,12 +6,24 @@ import std.file;
 import std.array;
 import std.conv;
 import mysql.d;
+import dauth;
 
 struct Story {
 	int id;
 	string title;
 	int cost;
 	int value;
+};
+
+struct User {
+	string name;
+	string password;
+};
+
+struct Session {
+	int ID;
+	int userID;
+	string sessionid;
 };
 
 struct MysqlParams {
@@ -40,14 +52,23 @@ public:
 				`done` DATETIME
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
+		mysql.query("
+			CREATE TABLE `user` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+				`password` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
 	}
 
 	void Reset() {
 		mysql.query("truncate story;");
+		mysql.query("truncate user;");
 	}
 
 	void Dismantle() {
 		mysql.query("drop table story;");
+		mysql.query("drop table user;");
 	}
 
 	void SaveStory(Story story) {
@@ -112,8 +133,40 @@ public:
 	void DoneStory(int id) {
 		mysql.query("update story set done=NOW() where ID=?;", id);
 	}
+
+	void CreateUser(User user) {
+		string hashedPassword = makeHash(dupPassword(user.password)).toString();
+		mysql.query("insert into user(name, password);", user.name, hashedPassword);
+	}
+
+	string Login(User user) {
+		auto rows = mysql.query("select ID, password from user where name=?;", user.name);
+		foreach (row; rows) {
+			string hashedPassword = row["password"];
+			if(isSameHash(dupPassword(user.password), parseHash(hashedPassword))) {
+				//Create session
+				return "session";
+			}
+			return "";
+		}
+		return "";
+	}
+
+	Session LoadSession(string sessionid) {
+		auto rows = mysql.query("select ID, userID, sessionid from session where sessionid=?;", sessionid);
+		Session session;
+		foreach (row; rows) {
+			session.ID = to!int(row["ID"]);
+			session.userID = to!int(row["userID"]);
+			session.sessionid = row["sessionid"];
+			return session;
+		}
+		return session;
+	}
 };
 
+
+alias Test = void function(Storage);
 class StorageTest {
 public:
 	Storage storage;
@@ -129,70 +182,71 @@ public:
 		storage =  new Storage(params);
 		storage.Prepare();
 
+		auto tests = PrepareTests();
+
 		try {
-			Backlog_empty_at_start();
-			storage.Reset();
-			Saved_story_shows_up_in_backlog();
-			storage.Reset();
-			Story_can_be_updated();
-			storage.Reset();
-			Cancelled_story_is_removed_from_backlog();
-			storage.Reset();
-			Done_story_is_removed_from_backlog();
-			storage.Reset();
+			foreach(test; tests) {
+				test(storage);
+				storage.Reset();
+			}
 		}
 		catch(Exception e) {
 			writeln(e);
 		}
 		finally {
+			writeln("Dismantling");
 			storage.Dismantle();
 		}
 	}
 
-	void Backlog_empty_at_start() {
-		assert(0 == storage.LoadBacklog().length);
-	}
+	Test[string] PrepareTests() {
+		Test[string] tests;
+		tests["Backlog_empty_at_start"] = function(Storage storage) {
+			assert(0 == storage.LoadBacklog().length);
+		};
 
-	void Saved_story_shows_up_in_backlog() {
-		Story story;
-		storage.SaveStory(story);
-		assert(1 == storage.LoadBacklog().length);
-	}
+		tests["Saved_story_shows_up_in_backlog"] = function(Storage storage) {
+			Story story;
+			storage.SaveStory(story);
+			assert(1 == storage.LoadBacklog().length);
+		};
 
-	void Story_can_be_updated() {
-		Story story;
-		story.id = 0;
-		storage.SaveStory(story);
-		Story story2;
-		story2.id = 0;
-		storage.SaveStory(story2);
-		assert(1 == storage.LoadBacklog()[0].id);
-		assert(2 == storage.LoadBacklog()[1].id);
+		tests["Story_can_be_updated"] = function(Storage storage) {
+			Story story;
+			story.id = 0;
+			storage.SaveStory(story);
+			Story story2;
+			story2.id = 0;
+			storage.SaveStory(story2);
+			assert(1 == storage.LoadBacklog()[0].id);
+			assert(2 == storage.LoadBacklog()[1].id);
 
-		Story storyUpdate;
-		storyUpdate.id = 1;
-		storyUpdate.title = "Updated";
-		storage.SaveStory(storyUpdate);
-		assert(2 == storage.LoadBacklog().length);
-		assert("Updated" == storage.LoadBacklog()[0].title);
-	}
+			Story storyUpdate;
+			storyUpdate.id = 1;
+			storyUpdate.title = "Updated";
+			storage.SaveStory(storyUpdate);
+			assert(2 == storage.LoadBacklog().length);
+			assert("Updated" == storage.LoadBacklog()[0].title);
+		};
 
-	void Cancelled_story_is_removed_from_backlog() {
-		Story story;
-		storage.SaveStory(story);
-		Story[] backlog = storage.LoadBacklog();
-		storage.CancelStory(backlog[0].id);
-		assert(0 == storage.LoadBacklog().length);
-		assert(1 == storage.CancelledStories().length);
-	}
+		tests["Cancelled_story_is_removed_from_backlog"] = function(Storage storage) {
+			Story story;
+			storage.SaveStory(story);
+			Story[] backlog = storage.LoadBacklog();
+			storage.CancelStory(backlog[0].id);
+			assert(0 == storage.LoadBacklog().length);
+			assert(1 == storage.CancelledStories().length);
+		};
 
-	void Done_story_is_removed_from_backlog() {
-		Story story;
-		storage.SaveStory(story);
-		Story[] backlog = storage.LoadBacklog();
-		storage.DoneStory(backlog[0].id);
-		assert(0 == storage.LoadBacklog().length);
-		assert(1 == storage.DoneStories().length);
+		tests["Done_story_is_removed_from_backlog"] = function(Storage storage) {
+			Story story;
+			storage.SaveStory(story);
+			Story[] backlog = storage.LoadBacklog();
+			storage.DoneStory(backlog[0].id);
+			assert(0 == storage.LoadBacklog().length);
+			assert(1 == storage.DoneStories().length);
+		};
+		return tests;
 	}
 };
 
