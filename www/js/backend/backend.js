@@ -6,13 +6,15 @@ function apicall(url, data) {
 		},
 		body: JSON.stringify(data),
 	})
-	.then(response => response.json());
-	/*
+	.then(response => response.json())
 	.then(data => {
-		console.log('Success:', data);
-
-	})
-	.catch((error) => {
+		if(data.loggedin == false) {
+			window.location.href = '/login.html';
+		} else {
+			return data;
+		}
+	});
+/*	.catch((error) => {
 		console.error('Error:', error);
 	});*/
 }

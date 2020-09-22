@@ -55,6 +55,14 @@ public:
 	void DoneStory(int id) {
 		storage.DoneStory(id);
 	}
+
+	void CreateUser(User user) {
+		storage.CreateUser(user);
+	}
+
+	string Login(User user) {
+		return storage.Login(user);
+	}
 };
 
 class HTTPAPI {
@@ -118,20 +126,60 @@ public:
 		json["success"] = true;
 		res.writeBody(serializeToJsonString(json), 200);
 	}
+
+	void CreateUser(HTTPServerRequest req, HTTPServerResponse res) {
+		User user;
+		user.name = req.json["name"].to!string;
+		user.password = req.json["password"].to!string;
+
+		api.CreateUser(user);
+		Json json = Json.emptyObject;
+		json["success"] = true;
+		res.writeBody(serializeToJsonString(json), 200);
+	}
+
+	void Login(HTTPServerRequest req, HTTPServerResponse res) {
+		User user;
+		user.name = req.form["name"];
+		user.password = req.form["password"];
+
+		if("create" == req.form["button"]) {
+			api.CreateUser(user);
+		}
+
+		string sessionid = api.Login(user);
+
+		if(sessionid != "") {
+			auto session = res.startSession();
+			session.set("sessionid", sessionid);
+			res.redirect("/");
+		} else {
+			res.redirect("/login.html");
+		}
+	}
 };
 
-void index(HTTPServerRequest req, HTTPServerResponse res)
-{
+void index(HTTPServerRequest req, HTTPServerResponse res) {
 	Json json = Json.emptyObject;
 	json["success"] = true;
 	res.writeBody(serializeToJsonString(json), 200);
 }
 
-void main()
-{
+void checkLogin(HTTPServerRequest req, HTTPServerResponse res) {
+	if (!req.session) {
+		Json json = Json.emptyObject;
+		json["success"] = false;
+		json["loggedin"] = false;
+		res.writeBody(serializeToJsonString(json), 200);
+	}
+}
+
+void main() {
 	HTTPAPI httpapi = new HTTPAPI;
 
 	auto router = new URLRouter;
+	router.post("/api/login", &httpapi.Login);
+	router.any("*", &checkLogin);
 	router.get("/", &index);
 	router.get("/api/test", &index);
 	router.post("/api/savestory", &httpapi.SaveStory);
@@ -140,8 +188,10 @@ void main()
 	router.post("/api/donestory", &httpapi.DoneStory);
 	router.post("/api/cancelledstories", &httpapi.CancelledStories);
 	router.post("/api/donestories", &httpapi.DoneStories);
+	router.post("/api/createuser", &httpapi.CreateUser);
 
 	auto settings = new HTTPServerSettings;
+	settings.sessionStore = new MemorySessionStore;
 	settings.port = 8080;
 
 	listenHTTP(settings, router);
