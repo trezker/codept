@@ -63,6 +63,14 @@ public:
 	string Login(User user) {
 		return storage.Login(user);
 	}
+
+	bool IsLoggedIn(string sessionid) {
+		auto session = storage.LoadSession(sessionid);
+		if(session.userid != 0) {
+			return true;
+		}
+		return false;
+	}
 };
 
 class HTTPAPI {
@@ -157,6 +165,19 @@ public:
 			res.redirect("/login.html");
 		}
 	}
+
+	void CheckLogin(HTTPServerRequest req, HTTPServerResponse res) {
+		Json json = Json.emptyObject;
+		json["loggedin"] = false;
+		if (!req.session) {
+			res.writeBody(serializeToJsonString(json), 200);
+		} else {
+			string sessionid = req.session.get!string("sessionid");
+			if(!api.IsLoggedIn(sessionid)) {
+				res.writeBody(serializeToJsonString(json), 200);
+			}
+		}
+	}
 };
 
 void index(HTTPServerRequest req, HTTPServerResponse res) {
@@ -165,21 +186,13 @@ void index(HTTPServerRequest req, HTTPServerResponse res) {
 	res.writeBody(serializeToJsonString(json), 200);
 }
 
-void checkLogin(HTTPServerRequest req, HTTPServerResponse res) {
-	if (!req.session) {
-		Json json = Json.emptyObject;
-		json["success"] = false;
-		json["loggedin"] = false;
-		res.writeBody(serializeToJsonString(json), 200);
-	}
-}
 
 void main() {
 	HTTPAPI httpapi = new HTTPAPI;
 
 	auto router = new URLRouter;
 	router.post("/api/login", &httpapi.Login);
-	router.any("*", &checkLogin);
+	router.any("*", &httpapi.CheckLogin);
 	router.get("/", &index);
 	router.get("/api/test", &index);
 	router.post("/api/savestory", &httpapi.SaveStory);

@@ -21,7 +21,7 @@ struct User {
 	string password;
 };
 
-struct Session {
+struct APISession {
 	int id;
 	int userid;
 	string sessionid;
@@ -176,9 +176,13 @@ public:
 		return "";
 	}
 
-	Session LoadSession(string sessionid) {
+	void Logout(string sessionid) {
+		mysql.query("delete from session where sessionid=?", sessionid);
+	}
+
+	APISession LoadSession(string sessionid) {
 		auto rows = mysql.query("select ID, userID, sessionid from session where sessionid=?;", sessionid);
-		Session session;
+		APISession session;
 		foreach (row; rows) {
 			session.id = to!int(row["ID"]);
 			session.userid = to!int(row["userID"]);
@@ -303,7 +307,7 @@ public:
 			user.password = "password";
 			storage.CreateUser(user);
 			string sessionid = storage.Login(user);
-			Session session = storage.LoadSession(sessionid);
+			APISession session = storage.LoadSession(sessionid);
 			User sessionuser = storage.LoadUser(session.userid);
 			assert(user.name == sessionuser.name);
 		};
@@ -321,6 +325,23 @@ public:
 			string sessionid2 = storage.Login(user2);
 			assert(sessionid1 != sessionid2);
 		};
+
+		tests["After logout, session should not contain a user"] = function(Storage storage) {
+			User user;
+			user.name = "somebody";
+			user.password = "password";
+			storage.CreateUser(user);
+			string sessionid = storage.Login(user);
+			APISession session = storage.LoadSession(sessionid);
+			User sessionuser = storage.LoadUser(session.userid);
+			assert(user.name == sessionuser.name);
+
+			storage.Logout(sessionid);
+			session = storage.LoadSession(sessionid);
+			assert("" == session.sessionid);
+			assert(0 == session.userid);
+		};
+
 		return tests;
 	}
 };
