@@ -1,5 +1,5 @@
-function apicall(url, data) {
-	return fetch(url, {
+async function apicall(url, data) {
+	return await fetch(url, {
 		method: 'POST', // or 'PUT'
 		headers: {
 			'Content-Type': 'application/json',
@@ -42,6 +42,10 @@ function Backend () {
 
 	this.doneStory = function(story) {
 		return apicall('api/donestory', {"id": story.id});
+	};
+
+	this.logout = function() {
+		return apicall('api/logout', {});
 	};
 };
 

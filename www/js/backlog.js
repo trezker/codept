@@ -31,6 +31,10 @@ function BacklogViewModel() {
 		stories: []
 	});
 
+	self.logout = function() {
+		backend.logout();
+	};
+
 	self.refreshBacklog = function() {
 		backend.loadBacklog()
 		.then(data => {

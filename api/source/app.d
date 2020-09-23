@@ -64,6 +64,10 @@ public:
 		return storage.Login(user);
 	}
 
+	void Logout(string sessionid) {
+		storage.Logout(sessionid);
+	}
+
 	bool IsLoggedIn(string sessionid) {
 		auto session = storage.LoadSession(sessionid);
 		if(session.userid != 0) {
@@ -158,7 +162,10 @@ public:
 		string sessionid = api.Login(user);
 
 		if(sessionid != "") {
-			auto session = res.startSession();
+			auto session = req.session;
+			if(!session) {
+				session = res.startSession();
+			}
 			session.set("sessionid", sessionid);
 			res.redirect("/");
 		} else {
@@ -166,16 +173,22 @@ public:
 		}
 	}
 
-	void CheckLogin(HTTPServerRequest req, HTTPServerResponse res) {
+	void Logout(HTTPServerRequest req, HTTPServerResponse res) {
+		string sessionid = req.session.get!string("sessionid");
+		api.Logout(sessionid);
 		Json json = Json.emptyObject;
 		json["loggedin"] = false;
-		if (!req.session) {
+		res.writeBody(serializeToJsonString(json), 200);
+	}
+
+	void CheckLogin(HTTPServerRequest req, HTTPServerResponse res) {
+		if (
+			!req.session ||
+			!api.IsLoggedIn(req.session.get!string("sessionid")))
+		{
+			Json json = Json.emptyObject;
+			json["loggedin"] = false;
 			res.writeBody(serializeToJsonString(json), 200);
-		} else {
-			string sessionid = req.session.get!string("sessionid");
-			if(!api.IsLoggedIn(sessionid)) {
-				res.writeBody(serializeToJsonString(json), 200);
-			}
 		}
 	}
 };
@@ -202,6 +215,7 @@ void main() {
 	router.post("/api/cancelledstories", &httpapi.CancelledStories);
 	router.post("/api/donestories", &httpapi.DoneStories);
 	router.post("/api/createuser", &httpapi.CreateUser);
+	router.post("/api/logout", &httpapi.Logout);
 
 	auto settings = new HTTPServerSettings;
 	settings.sessionStore = new MemorySessionStore;
