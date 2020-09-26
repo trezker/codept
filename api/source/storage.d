@@ -18,6 +18,14 @@ public:
 
 	void Prepare() {
 		mysql.query("
+			CREATE TABLE `product` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`userID` bigint(20) NOT NULL,
+				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
 			CREATE TABLE `story` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`productID` bigint(20) NOT NULL,
@@ -25,7 +33,9 @@ public:
 				`cost` int(11) NOT NULL,
 				`value` int(11) NOT NULL,
 				`cancelled` DATETIME,
-				`done` DATETIME
+				`done` DATETIME,
+				CONSTRAINT `story_fk_product` FOREIGN KEY (`productID`)
+				REFERENCES `product` (`id`) ON DELETE CASCADE
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 
@@ -45,20 +55,13 @@ public:
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 
-		mysql.query("
-			CREATE TABLE `product` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`userID` bigint(20) NOT NULL,
-				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-		");
 	}
 
 	void Reset() {
 		mysql.query("truncate story;");
 		mysql.query("truncate user;");
 		mysql.query("truncate session;");
-		mysql.query("truncate product;");
+		mysql.query("delete from product;");
 	}
 
 	void Dismantle() {
@@ -226,7 +229,7 @@ public:
 };
 
 
-alias Test = void function(Storage);
+alias Test = void function(StorageTest, Storage);
 class StorageTest {
 public:
 	Storage storage;
@@ -246,7 +249,7 @@ public:
 
 		try {
 			foreach(test; tests) {
-				test(storage);
+				test(this, storage);
 				storage.Reset();
 			}
 		}
@@ -259,38 +262,64 @@ public:
 		}
 	}
 
+	int PrepareProduct() {
+		User user;
+		user.name = "somebody";
+		user.password = "password";
+		storage.CreateUser(user);
+		user = storage.UserByName(user.name);
+
+		Product product;
+		product.userid = user.id;
+		product.title = "someproduct";
+		storage.SaveProduct(product);
+		Product[] products = storage.ProductsByUser(user.id);
+		return products[0].id;
+	}
+
 	Test[string] PrepareTests() {
 		Test[string] tests;
-		tests["Backlog_empty_at_start"] = function(Storage storage) {
+		tests["Backlog_empty_at_start"] = function(StorageTest storagetest, Storage storage) {
 			assert(0 == storage.LoadBacklog().length);
 		};
 
-		tests["Saved_story_shows_up_in_backlog"] = function(Storage storage) {
+		tests["Saved_story_shows_up_in_backlog"] = function(StorageTest storagetest, Storage storage) {
+			int productid = storagetest.PrepareProduct();
+
 			Story story;
+			story.productid = productid;
 			storage.SaveStory(story);
 			assert(1 == storage.LoadBacklog().length);
 		};
 
-		tests["Story_can_be_updated"] = function(Storage storage) {
+		tests["Story_can_be_updated"] = function(StorageTest storagetest, Storage storage) {
+			int productid = storagetest.PrepareProduct();
+
 			Story story;
 			story.id = 0;
+			story.productid = productid;
 			storage.SaveStory(story);
 			Story story2;
 			story2.id = 0;
+			story2.productid = productid;
 			storage.SaveStory(story2);
 			assert(1 == storage.LoadBacklog()[0].id);
 			assert(2 == storage.LoadBacklog()[1].id);
 
 			Story storyUpdate;
 			storyUpdate.id = 1;
+			storyUpdate.productid = productid;
 			storyUpdate.title = "Updated";
 			storage.SaveStory(storyUpdate);
 			assert(2 == storage.LoadBacklog().length);
 			assert("Updated" == storage.LoadBacklog()[0].title);
 		};
 
-		tests["Cancelled_story_is_removed_from_backlog"] = function(Storage storage) {
+		tests["Cancelled_story_is_removed_from_backlog"] = function(StorageTest storagetest, Storage storage) {
+			int productid = storagetest.PrepareProduct();
+
 			Story story;
+			story.productid = productid;
 			storage.SaveStory(story);
 			Story[] backlog = storage.LoadBacklog();
 			storage.CancelStory(backlog[0].id);
@@ -298,8 +327,11 @@ public:
 			assert(1 == storage.CancelledStories().length);
 		};
 
-		tests["Done_story_is_removed_from_backlog"] = function(Storage storage) {
+		tests["Done_story_is_removed_from_backlog"] = function(StorageTest storagetest, Storage storage) {
+			int productid = storagetest.PrepareProduct();
+
 			Story story;
+			story.productid = productid;
 			storage.SaveStory(story);
 			Story[] backlog = storage.LoadBacklog();
 			storage.DoneStory(backlog[0].id);
@@ -307,14 +339,14 @@ public:
 			assert(1 == storage.DoneStories().length);
 		};
 
-		tests["Login to wrong account fails"] = function(Storage storage) {
+		tests["Login to wrong account fails"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "nobody";
 			string sessionid = storage.Login(user);
 			assert("" == sessionid);
 		};
 
-		tests["Login with correct name and password works"] = function(Storage storage) {
+		tests["Login with correct name and password works"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
@@ -323,7 +355,7 @@ public:
 			assert("" != sessionid);
 		};
 
-		tests["Login with correct name but wrong password fails"] = function(Storage storage) {
+		tests["Login with correct name but wrong password fails"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
@@ -333,7 +365,7 @@ public:
 			assert("" == sessionid);
 		};
 
-		tests["After login, session should contain correct user"] = function(Storage storage) {
+		tests["After login, session should contain correct user"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
@@ -344,7 +376,7 @@ public:
 			assert(user.name == sessionuser.name);
 		};
 
-		tests["Multiple logins should not get the same sessionid"] = function(Storage storage) {
+		tests["Multiple logins should not get the same sessionid"] = function(StorageTest storagetest, Storage storage) {
 			User user1;
 			user1.name = "some1";
 			user1.password = "password1";
@@ -358,7 +390,7 @@ public:
 			assert(sessionid1 != sessionid2);
 		};
 
-		tests["After logout, session should not contain a user"] = function(Storage storage) {
+		tests["After logout, session should not contain a user"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
@@ -374,7 +406,7 @@ public:
 			assert(0 == session.userid);
 		};
 
-		tests["Product can be created"] = function(Storage storage) {
+		tests["Product can be created"] = function(StorageTest storagetest, Storage storage) {
 			User user;
 			user.name = "somebody";
 			user.password = "password";
