@@ -8,6 +8,7 @@
 		"mysql-d": "~>0.3.3",
 		"vibe-d": "~>0.9.1"
 	},
+	"buildRequirements": ["disallowDeprecations"],
 	"description": "A minimal D application.",
 	"license": "MIT",
 	"name": "api"

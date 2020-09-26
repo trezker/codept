@@ -26,3 +26,9 @@ struct MysqlParams {
 	string password;
 	string database;
 };
+
+struct Product {
+	int id;
+	int userid;
+	string title;
+};

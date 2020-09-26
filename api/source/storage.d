@@ -3,7 +3,6 @@ module codept.storage;
 import std.algorithm;
 import std.stdio;
 import std.file;
-import std.array;
 import std.conv;
 import mysql.d;
 import dauth;
@@ -44,18 +43,28 @@ public:
 				`sessionid` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
+
+		mysql.query("
+			CREATE TABLE `product` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`userID` bigint(20) NOT NULL,
+				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
 	}
 
 	void Reset() {
 		mysql.query("truncate story;");
 		mysql.query("truncate user;");
 		mysql.query("truncate session;");
+		mysql.query("truncate product;");
 	}
 
 	void Dismantle() {
 		mysql.query("drop table story;");
 		mysql.query("drop table user;");
 		mysql.query("drop table session;");
+		mysql.query("drop table product;");
 	}
 
 	void SaveStory(Story story) {
@@ -65,6 +74,27 @@ public:
 		else {
 			mysql.query("update story set title=?, cost=?, value=? where ID=?;", story.title, story.cost, story.value, story.id);
 		}
+	}
+
+	void SaveProduct(Product product) {
+		mysql.query("insert into product (userid, title) values (?, ?);", product.userid, product.title);
+	}
+
+	Product[] ProductsByUser(int userid) {
+		Product[] products;
+		auto rows = mysql.query("
+			select ID, userID, title
+			from product
+			where userID = ?
+			order by title asc;", userid);
+		foreach (row; rows) {
+			Product product;
+			product.id = to!int(row["ID"]);
+			product.userid = to!int(row["userID"]);
+			product.title = row["title"];
+			products ~= product;
+		}
+		return products;
 	}
 
 	Story[] LoadBacklog() {
@@ -128,6 +158,17 @@ public:
 
 	User LoadUser(int id) {
 		auto rows = mysql.query("select ID, name from user where ID=?;", id);
+		User user;
+		foreach(row; rows) {
+			user.id = to!int(row["ID"]);
+			user.name = row["name"];
+			break;
+		}
+		return user;
+	}
+
+	User UserByName(string name) {
+		auto rows = mysql.query("select ID, name from user where name=?;", name);
 		User user;
 		foreach(row; rows) {
 			user.id = to!int(row["ID"]);
@@ -315,6 +356,22 @@ public:
 			session = storage.LoadSession(sessionid);
 			assert("" == session.sessionid);
 			assert(0 == session.userid);
+		};
+
+		tests["Product can be created"] = function(Storage storage) {
+			User user;
+			user.name = "somebody";
+			user.password = "password";
+			storage.CreateUser(user);
+			user = storage.UserByName(user.name);
+
+			Product product;
+			product.title = "some product";
+			product.userid = user.id;
+			storage.SaveProduct(product);
+
+			Product[] products = storage.ProductsByUser(user.id);
+			assert(1 == products.length);
 		};
 
 		return tests;
