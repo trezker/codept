@@ -20,6 +20,7 @@ public:
 		mysql.query("
 			CREATE TABLE `story` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`productID` bigint(20) NOT NULL,
 				`title` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,
 				`cost` int(11) NOT NULL,
 				`value` int(11) NOT NULL,
@@ -69,10 +70,10 @@ public:
 
 	void SaveStory(Story story) {
 		if(story.id == 0) {
-			mysql.query("insert into story (title, cost, value) values (?, ?, ?);", story.title, story.cost, story.value);
+			mysql.query("insert into story (productID, title, cost, value) values (?, ?, ?, ?);", story.productid, story.title, story.cost, story.value);
 		}
 		else {
-			mysql.query("update story set title=?, cost=?, value=? where ID=?;", story.title, story.cost, story.value, story.id);
+			mysql.query("update story set productID=?, title=?, cost=?, value=? where ID=?;", story.productid, story.title, story.cost, story.value, story.id);
 		}
 	}
 
@@ -100,13 +101,14 @@ public:
 	Story[] LoadBacklog() {
 		Story[] stories;
 		auto rows = mysql.query("
-			select ID, title, cost, value
+			select ID, productID, title, cost, value
 			from story
 			where cancelled is NULL and done is NULL
 			order by value-cost desc;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
+			story.productid = to!int(row["productID"]);
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
@@ -117,10 +119,11 @@ public:
 
 	Story[] CancelledStories() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, title, cost, value from story where cancelled is NOT NULL;");
+		auto rows = mysql.query("select ID, productID, title, cost, value from story where cancelled is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
+			story.productid = to!int(row["productID"]);
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
@@ -131,10 +134,11 @@ public:
 
 	Story[] DoneStories() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, title, cost, value from story where done is NOT NULL;");
+		auto rows = mysql.query("select ID, productID, title, cost, value from story where done is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
+			story.productid = to!int(row["productID"]);
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
