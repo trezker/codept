@@ -70,10 +70,16 @@ public:
 
 	void SaveStory(Story story) {
 		if(story.id == 0) {
-			mysql.query("insert into story (productID, title, cost, value) values (?, ?, ?, ?);", story.productid, story.title, story.cost, story.value);
+			mysql.query(
+				"insert into story (productID, title, cost, value) values (?, ?, ?, ?);",
+				story.productid, story.title, story.cost, story.value
+			);
 		}
 		else {
-			mysql.query("update story set productID=?, title=?, cost=?, value=? where ID=?;", story.productid, story.title, story.cost, story.value, story.id);
+			mysql.query(
+				"update story set productID=?, title=?, cost=?, value=? where ID=?;",
+				story.productid, story.title, story.cost, story.value, story.id
+			);
 		}
 	}
 
@@ -119,7 +125,10 @@ public:
 
 	Story[] CancelledStories() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, productID, title, cost, value from story where cancelled is NOT NULL;");
+		auto rows = mysql.query("
+			select ID, productID, title, cost, value
+			from story
+			where cancelled is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
@@ -134,7 +143,10 @@ public:
 
 	Story[] DoneStories() {
 		Story[] stories;
-		auto rows = mysql.query("select ID, productID, title, cost, value from story where done is NOT NULL;");
+		auto rows = mysql.query(
+			"select ID, productID, title, cost, value
+			from story
+			where done is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
 			story.id = to!int(row["ID"]);
