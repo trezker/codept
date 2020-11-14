@@ -61,6 +61,7 @@ function BacklogViewModel() {
 
 	self.newStory = {
 		id: 0,
+		productID: 1,
 		title: "",
 		cost: 5,
 		value: 5
