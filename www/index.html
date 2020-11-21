@@ -32,37 +32,37 @@
 			<form>
 				<div class="form-group">
 					<label for="title">Title</label>
-					<input type="text" class="form-control" id="title" data-bind="value: story.title">
+					<input type="text" class="form-control" id="title" data-bind="value: story.story.title">
 				</div>
 				<div class="form-group">
 					<label for="Cost">Cost</label>
-					<input type="number" class="form-control" id="cost" min="1" data-bind="value: story.cost">
+					<input type="number" class="form-control" id="cost" min="1" data-bind="value: story.story.cost">
 				</div>
 				<div class="form-group">
 					<label for="Value">Value</label>
-					<input type="number" class="form-control" id="value" min="1" data-bind="value: story.value">
+					<input type="number" class="form-control" id="value" min="1" data-bind="value: story.story.value">
 				</div>
-				<button type="button" class="btn btn-primary" data-bind="click: save">Save</button>
+				<button type="button" class="btn btn-primary" data-bind="click: story.save">Save</button>
 			</form>
 		</div>
 
-		<ul class="nav nav-tabs" data-bind="foreach: storyTabs">
+		<ul class="nav nav-tabs" data-bind="foreach: story.storyTabs">
 			<li class="nav-item">
-				<a class="nav-link" href="#" data-bind="text: title, click: $root.selectStoryTab, css: { active: $root.storyTab() == value }"></a>
+				<a class="nav-link" href="#" data-bind="text: title, click: $root.story.selectStoryTab, css: { active: $root.story.storyTab() == value }"></a>
 			</li>
 		</ul>
 
-		<div style="margin: 1em;" data-bind="visible: storyTab() == 'backlog'">
-			<table data-bind="foreach: backlog.stories">
+		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'backlog'">
+			<table data-bind="foreach: story.backlog.stories">
 				<tr>
 					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.editStory">Edit</button>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.story.editStory">Edit</button>
 					</td>
 					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.cancelStory">Cancel</button>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.story.cancelStory">Cancel</button>
 					</td>
 					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.doneStory">Done</button>
+						<button type="button" class="btn btn-primary" data-bind="click: $root.story.doneStory">Done</button>
 					</td>
 					<td>
 						<span data-bind="text: title"> </span>
@@ -73,8 +73,8 @@
 				</tr>
 			</table>
 		</div>
-		<div style="margin: 1em;" data-bind="visible: storyTab() == 'done'">
-			<table data-bind="foreach: done.stories">
+		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'done'">
+			<table data-bind="foreach: story.done.stories">
 				<tr>
 					<td>
 						<span data-bind="text: title"> </span>
@@ -85,8 +85,8 @@
 				</tr>
 			</table>
 		</div>
-		<div style="margin: 1em;" data-bind="visible: storyTab() == 'cancelled'">
-			<table data-bind="foreach: cancelled.stories">
+		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'cancelled'">
+			<table data-bind="foreach: story.cancelled.stories">
 				<tr>
 					<td>
 						<span data-bind="text: title"> </span>
@@ -104,6 +104,7 @@
 	<script type='text/javascript' src='/js/lib/knockout-3.5.1.js'></script>
 	<script type='text/javascript' src='/js/lib/knockout.mapping-latest.js'></script>
 	<script type='text/javascript' src='/js/backend/backend.js'></script>
+	<script type='text/javascript' src='/js/story.js'></script>
 	<script type='text/javascript' src='/js/backlog.js'></script>
 </body>
 </html>

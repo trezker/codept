@@ -95,15 +95,3 @@ function Story() {
 		});
 	};
 }
-
-function BacklogViewModel() {
-	var self = this;
-
-	self.story = new Story();
-
-	self.logout = function() {
-		backend.logout();
-	};
-}
-
-ko.applyBindings(new BacklogViewModel());
