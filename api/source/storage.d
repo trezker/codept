@@ -4,6 +4,7 @@ import std.algorithm;
 import std.stdio;
 import std.file;
 import std.conv;
+import std.json;
 import mysql.d;
 import dauth;
 
@@ -14,9 +15,66 @@ class Storage {
 public:
 	this(MysqlParams params) {
 		mysql = new Mysql(params.url, to!int(params.port), params.user, params.password, params.database);
+		/*
+		auto rows = mysql.query("select ID, name, password from user where UUID is NULL;");
+		User user;
+		foreach(row; rows) {
+			auto uuid = Generate_UUID();
+
+			user.id = to!int(row["ID"]);
+			user.name = row["name"];
+			string password = row["password"];
+
+			JSONValue jj = [ "name": user.name ];
+			jj.object["password"] = JSONValue(password);
+
+			mysql.query("
+				insert into event(typeID, UUID, data)
+				select ID, ?, ? from event_type where name = 'CreateUser';",
+				uuid,
+				jj.toString
+			);
+			break;
+		}*/
+	}
+
+	int Generate_UUID() {
+		mysql.query("insert into uuid(UUID) values(UUID_TO_BIN(UUID(), true));");
+		return mysql.lastInsertId;
 	}
 
 	void Prepare() {
+		mysql.query("
+			CREATE TABLE `uuid` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`UUID` binary(16) UNIQUE KEY NOT NULL,
+				`UUID_text` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci GENERATED ALWAYS AS (BIN_TO_UUID(`UUID`,true)) VIRTUAL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
+			CREATE TABLE `event_type` (
+				`ID` bigint(20) NOT NULL PRIMARY KEY,
+				`name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
+			INSERT INTO `event_type` (`ID`, `name`) VALUES (1, 'CreateUser');
+		");
+
+		mysql.query("
+			CREATE TABLE `event` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`occurred` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				`typeID` bigint(20) NOT NULL,
+				`UUID` bigint(20) NOT NULL,
+				`data` json DEFAULT NULL,
+				CONSTRAINT `event_fk_type` FOREIGN KEY (`typeID`) REFERENCES `event_type` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+				CONSTRAINT `event_fk_uuid` FOREIGN KEY (`UUID`) REFERENCES `uuid` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
 		mysql.query("
 			CREATE TABLE `product` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -42,8 +100,10 @@ public:
 		mysql.query("
 			CREATE TABLE `user` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`UUID` bigint(20) NOT NULL,
 				`name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-				`password` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
+				`password` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
+				CONSTRAINT `user_fk_uuid` FOREIGN KEY (`UUID`) REFERENCES `uuid` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 
@@ -170,9 +230,25 @@ public:
 		mysql.query("update story set done=NOW() where ID=?;", id);
 	}
 
+	void StoreEvent(int uuid, string type, JSONValue data) {
+		mysql.query("
+			insert into event(typeID, UUID, data)
+			select ID, ?, ? from event_type where name = ?;",
+			uuid,
+			data.toString,
+			type
+		);
+	}
+
 	void CreateUser(User user) {
+		auto uuid = Generate_UUID();
 		string hashedPassword = makeHash(dupPassword(user.password)).toString();
-		mysql.query("insert into user(name, password) values(?, ?);", user.name, hashedPassword);
+
+		JSONValue data = [ "name": user.name ];
+		data.object["password"] = JSONValue(hashedPassword);
+		StoreEvent(uuid, "CreateUser", data);
+
+		mysql.query("insert into user(UUID, name, password) values(?, ?, ?);", uuid, user.name, hashedPassword);
 	}
 
 	User LoadUser(int id) {

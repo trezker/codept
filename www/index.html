@@ -28,74 +28,84 @@
 				</div>
 			</nav>
 		</div>
-		<div style="margin: 1em;">
-			<form>
-				<div class="form-group">
-					<label for="title">Title</label>
-					<input type="text" class="form-control" id="title" data-bind="value: story.story.title">
-				</div>
-				<div class="form-group">
-					<label for="Cost">Cost</label>
-					<input type="number" class="form-control" id="cost" min="1" data-bind="value: story.story.cost">
-				</div>
-				<div class="form-group">
-					<label for="Value">Value</label>
-					<input type="number" class="form-control" id="value" min="1" data-bind="value: story.story.value">
-				</div>
-				<button type="button" class="btn btn-primary" data-bind="click: story.save">Save</button>
-			</form>
-		</div>
 
-		<ul class="nav nav-tabs" data-bind="foreach: story.storyTabs">
-			<li class="nav-item">
-				<a class="nav-link" href="#" data-bind="text: title, click: $root.story.selectStoryTab, css: { active: $root.story.storyTab() == value }"></a>
-			</li>
-		</ul>
+		<div class="row">
+			<div class="col-2">
+				<div data-bind="foreach: products">
+					<div data-bind="text: title"></div>
+				</div>
+			</div>
+			<div class="col">
+				<div style="margin: 1em;">
+					<form>
+						<div class="form-group">
+							<label for="title">Title</label>
+							<input type="text" class="form-control" id="title" data-bind="value: story.story.title">
+						</div>
+						<div class="form-group">
+							<label for="Cost">Cost</label>
+							<input type="number" class="form-control" id="cost" min="1" data-bind="value: story.story.cost">
+						</div>
+						<div class="form-group">
+							<label for="Value">Value</label>
+							<input type="number" class="form-control" id="value" min="1" data-bind="value: story.story.value">
+						</div>
+						<button type="button" class="btn btn-primary" data-bind="click: story.save">Save</button>
+					</form>
+				</div>
 
-		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'backlog'">
-			<table data-bind="foreach: story.backlog.stories">
-				<tr>
-					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.story.editStory">Edit</button>
-					</td>
-					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.story.cancelStory">Cancel</button>
-					</td>
-					<td>
-						<button type="button" class="btn btn-primary" data-bind="click: $root.story.doneStory">Done</button>
-					</td>
-					<td>
-						<span data-bind="text: title"> </span>
-					</td>
-					<td>
-						Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
-					</td>
-				</tr>
-			</table>
-		</div>
-		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'done'">
-			<table data-bind="foreach: story.done.stories">
-				<tr>
-					<td>
-						<span data-bind="text: title"> </span>
-					</td>
-					<td>
-						Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
-					</td>
-				</tr>
-			</table>
-		</div>
-		<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'cancelled'">
-			<table data-bind="foreach: story.cancelled.stories">
-				<tr>
-					<td>
-						<span data-bind="text: title"> </span>
-					</td>
-					<td>
-						Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
-					</td>
-				</tr>
-			</table>
+				<ul class="nav nav-tabs" data-bind="foreach: story.storyTabs">
+					<li class="nav-item">
+						<a class="nav-link" href="#" data-bind="text: title, click: $root.story.selectStoryTab, css: { active: $root.story.storyTab() == value }"></a>
+					</li>
+				</ul>
+
+				<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'backlog'">
+					<table data-bind="foreach: story.backlog.stories">
+						<tr>
+							<td>
+								<button type="button" class="btn btn-primary" data-bind="click: $root.story.editStory">Edit</button>
+							</td>
+							<td>
+								<button type="button" class="btn btn-primary" data-bind="click: $root.story.cancelStory">Cancel</button>
+							</td>
+							<td>
+								<button type="button" class="btn btn-primary" data-bind="click: $root.story.doneStory">Done</button>
+							</td>
+							<td>
+								<span data-bind="text: title"> </span>
+							</td>
+							<td>
+								Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'done'">
+					<table data-bind="foreach: story.done.stories">
+						<tr>
+							<td>
+								<span data-bind="text: title"> </span>
+							</td>
+							<td>
+								Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div style="margin: 1em;" data-bind="visible: story.storyTab() == 'cancelled'">
+					<table data-bind="foreach: story.cancelled.stories">
+						<tr>
+							<td>
+								<span data-bind="text: title"> </span>
+							</td>
+							<td>
+								Profit: <span data-bind='text: value()-cost()'>&nbsp;</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
 		</div>
 	</div>
 
