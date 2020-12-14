@@ -38,20 +38,15 @@ public:
 		}*/
 	}
 
-	int Generate_UUID() {
-		mysql.query("insert into uuid(UUID) values(UUID_TO_BIN(UUID(), true));");
-		return mysql.lastInsertId;
+	string Generate_UUID() {
+		auto rows = mysql.query("select UUID() as uuid;");
+		foreach (row; rows) {
+			return row["uuid"];
+		}
+		return "";
 	}
 
 	void Prepare() {
-		mysql.query("
-			CREATE TABLE `uuid` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`UUID` binary(16) UNIQUE KEY NOT NULL,
-				`UUID_text` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci GENERATED ALWAYS AS (BIN_TO_UUID(`UUID`,true)) VIRTUAL
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-		");
-
 		mysql.query("
 			CREATE TABLE `event_type` (
 				`ID` bigint(20) NOT NULL PRIMARY KEY,
@@ -68,18 +63,35 @@ public:
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 				`occurred` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				`typeID` bigint(20) NOT NULL,
-				`UUID` bigint(20) NOT NULL,
+				`objectID` binary(16) NOT NULL,
 				`data` json DEFAULT NULL,
-				CONSTRAINT `event_fk_type` FOREIGN KEY (`typeID`) REFERENCES `event_type` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-				CONSTRAINT `event_fk_uuid` FOREIGN KEY (`UUID`) REFERENCES `uuid` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
+				CONSTRAINT `event_fk_type` FOREIGN KEY (`typeID`) REFERENCES `event_type` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
+			CREATE TABLE `user` (
+				`ID` binary(16) NOT NULL PRIMARY KEY,
+				`name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+				`password` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+		");
+
+		mysql.query("
+			CREATE TABLE `session` (
+				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`userID` binary(16) NOT NULL,
+				`sessionid` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
+				CONSTRAINT `session_fk_user` FOREIGN KEY (`userID`) REFERENCES `user` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 
 		mysql.query("
 			CREATE TABLE `product` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`userID` bigint(20) NOT NULL,
-				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
+				`userID` binary(16) NOT NULL,
+				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
+				CONSTRAINT `product_fk_user` FOREIGN KEY (`userID`) REFERENCES `user` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 
@@ -96,39 +108,24 @@ public:
 				REFERENCES `product` (`id`) ON DELETE CASCADE
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
-
-		mysql.query("
-			CREATE TABLE `user` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`UUID` bigint(20) NOT NULL,
-				`name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-				`password` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
-				CONSTRAINT `user_fk_uuid` FOREIGN KEY (`UUID`) REFERENCES `uuid` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-		");
-
-		mysql.query("
-			CREATE TABLE `session` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`userID` bigint(20) NOT NULL,
-				`sessionid` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-		");
-
 	}
 
 	void Reset() {
 		mysql.query("truncate story;");
-		mysql.query("truncate user;");
-		mysql.query("truncate session;");
 		mysql.query("delete from product;");
+		mysql.query("truncate session;");
+		mysql.query("delete from user;");
+		mysql.query("truncate event;");
+		mysql.query("delete from event_type;");
 	}
 
 	void Dismantle() {
 		mysql.query("drop table story;");
-		mysql.query("drop table user;");
-		mysql.query("drop table session;");
 		mysql.query("drop table product;");
+		mysql.query("drop table session;");
+		mysql.query("drop table user;");
+		mysql.query("drop table event;");
+		mysql.query("drop table event_type;");
 	}
 
 	void SaveStory(Story story) {
@@ -150,7 +147,7 @@ public:
 		mysql.query("insert into product (userid, title) values (?, ?);", product.userid, product.title);
 	}
 
-	Product[] ProductsByUser(int userid) {
+	Product[] ProductsByUser(string userid) {
 		Product[] products;
 		auto rows = mysql.query("
 			select ID, userID, title
@@ -160,7 +157,7 @@ public:
 		foreach (row; rows) {
 			Product product;
 			product.id = to!int(row["ID"]);
-			product.userid = to!int(row["userID"]);
+			product.userid = row["userID"];
 			product.title = row["title"];
 			products ~= product;
 		}
@@ -230,10 +227,10 @@ public:
 		mysql.query("update story set done=NOW() where ID=?;", id);
 	}
 
-	void StoreEvent(int uuid, string type, JSONValue data) {
+	void StoreEvent(string uuid, string type, JSONValue data) {
 		mysql.query("
-			insert into event(typeID, UUID, data)
-			select ID, ?, ? from event_type where name = ?;",
+			insert into event(typeID, objectID, data)
+			select ID, UUID_TO_BIN(?, true), ? from event_type where name = ?;",
 			uuid,
 			data.toString,
 			type
@@ -248,14 +245,14 @@ public:
 		data.object["password"] = JSONValue(hashedPassword);
 		StoreEvent(uuid, "CreateUser", data);
 
-		mysql.query("insert into user(UUID, name, password) values(?, ?, ?);", uuid, user.name, hashedPassword);
+		mysql.query("insert into user(ID, name, password) values(UUID_TO_BIN(?, true), ?, ?);", uuid, user.name, hashedPassword);
 	}
 
-	User LoadUser(int id) {
+	User LoadUser(string id) {
 		auto rows = mysql.query("select ID, name from user where ID=?;", id);
 		User user;
 		foreach(row; rows) {
-			user.id = to!int(row["ID"]);
+			user.id = row["ID"];
 			user.name = row["name"];
 			break;
 		}
@@ -266,7 +263,7 @@ public:
 		auto rows = mysql.query("select ID, name from user where name=?;", name);
 		User user;
 		foreach(row; rows) {
-			user.id = to!int(row["ID"]);
+			user.id = row["ID"];
 			user.name = row["name"];
 			break;
 		}
@@ -296,7 +293,7 @@ public:
 		APISession session;
 		foreach (row; rows) {
 			session.id = to!int(row["ID"]);
-			session.userid = to!int(row["userID"]);
+			session.userid = row["userID"];
 			session.sessionid = row["sessionid"];
 			return session;
 		}
@@ -479,7 +476,7 @@ public:
 			storage.Logout(sessionid);
 			session = storage.LoadSession(sessionid);
 			assert("" == session.sessionid);
-			assert(0 == session.userid);
+			assert("" == session.userid);
 		};
 
 		tests["Product can be created"] = function(StorageTest storagetest, Storage storage) {

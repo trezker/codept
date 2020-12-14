@@ -73,7 +73,7 @@ public:
 
 	bool IsLoggedIn(string sessionid) {
 		auto session = storage.LoadSession(sessionid);
-		if(session.userid != 0) {
+		if(session.userid != "") {
 			return true;
 		}
 		return false;

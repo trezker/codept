@@ -9,14 +9,14 @@ struct Story {
 };
 
 struct User {
-	int id;
+	string id;
 	string name;
 	string password;
 };
 
 struct APISession {
 	int id;
-	int userid;
+	string userid;
 	string sessionid;
 };
 
@@ -30,6 +30,6 @@ struct MysqlParams {
 
 struct Product {
 	int id;
-	int userid;
+	string userid;
 	string title;
 };
