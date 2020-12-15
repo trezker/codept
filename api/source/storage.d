@@ -88,7 +88,7 @@ public:
 
 		mysql.query("
 			CREATE TABLE `product` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				`ID` binary(16) NOT NULL PRIMARY KEY,
 				`userID` binary(16) NOT NULL,
 				`title` varchar(256) COLLATE utf8mb4_unicode_ci NOT NULL,
 				CONSTRAINT `product_fk_user` FOREIGN KEY (`userID`) REFERENCES `user` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
@@ -97,15 +97,14 @@ public:
 
 		mysql.query("
 			CREATE TABLE `story` (
-				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`productID` bigint(20) NOT NULL,
+				`ID` binary(16) NOT NULL PRIMARY KEY,
+				`productID` binary(16) NOT NULL,
 				`title` varchar(512) COLLATE utf8mb4_unicode_ci NOT NULL,
 				`cost` int(11) NOT NULL,
 				`value` int(11) NOT NULL,
 				`cancelled` DATETIME,
 				`done` DATETIME,
-				CONSTRAINT `story_fk_product` FOREIGN KEY (`productID`)
-				REFERENCES `product` (`id`) ON DELETE CASCADE
+				CONSTRAINT `story_fk_product` FOREIGN KEY (`productID`) REFERENCES `product` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
 	}
@@ -129,34 +128,36 @@ public:
 	}
 
 	void SaveStory(Story story) {
-		if(story.id == 0) {
+		if(story.id == "") {
+			auto uuid = Generate_UUID();
 			mysql.query(
-				"insert into story (productID, title, cost, value) values (?, ?, ?, ?);",
-				story.productid, story.title, story.cost, story.value
+				"insert into story (ID, productID, title, cost, value) values (UUID_TO_BIN(?, true), UUID_TO_BIN(?, true), ?, ?, ?);",
+				uuid, story.productid, story.title, story.cost, story.value
 			);
 		}
 		else {
 			mysql.query(
-				"update story set productID=?, title=?, cost=?, value=? where ID=?;",
+				"update story set productID=UUID_TO_BIN(?, true), title=?, cost=?, value=? where ID=UUID_TO_BIN(?, true);",
 				story.productid, story.title, story.cost, story.value, story.id
 			);
 		}
 	}
 
 	void SaveProduct(Product product) {
-		mysql.query("insert into product (userid, title) values (UUID_TO_BIN(?, true), ?);", product.userid, product.title);
+		auto uuid = Generate_UUID();
+		mysql.query("insert into product (ID, userID, title) values (UUID_TO_BIN(?, true), UUID_TO_BIN(?, true), ?);", uuid, product.userid, product.title);
 	}
 
 	Product[] ProductsByUser(string userid) {
 		Product[] products;
 		auto rows = mysql.query("
-			select ID, BIN_TO_UUID(userID,true) as userID, title
+			select BIN_TO_UUID(ID, true) as ID, BIN_TO_UUID(userID,true) as userID, title
 			from product
 			where userID = UUID_TO_BIN(?, true)
 			order by title asc;", userid);
 		foreach (row; rows) {
 			Product product;
-			product.id = to!int(row["ID"]);
+			product.id = row["ID"];
 			product.userid = row["userID"];
 			product.title = row["title"];
 			products ~= product;
@@ -167,14 +168,14 @@ public:
 	Story[] LoadBacklog() {
 		Story[] stories;
 		auto rows = mysql.query("
-			select ID, productID, title, cost, value
+			select BIN_TO_UUID(ID, true) as ID, BIN_TO_UUID(productID, true) as productID, title, cost, value
 			from story
 			where cancelled is NULL and done is NULL
 			order by value-cost desc;");
 		foreach (row; rows) {
 			Story story;
-			story.id = to!int(row["ID"]);
-			story.productid = to!int(row["productID"]);
+			story.id = row["ID"];
+			story.productid = row["productID"];
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
@@ -186,13 +187,13 @@ public:
 	Story[] CancelledStories() {
 		Story[] stories;
 		auto rows = mysql.query("
-			select ID, productID, title, cost, value
+			select BIN_TO_UUID(ID, true) as ID, BIN_TO_UUID(productID, true) as productID, title, cost, value
 			from story
 			where cancelled is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
-			story.id = to!int(row["ID"]);
-			story.productid = to!int(row["productID"]);
+			story.id = row["ID"];
+			story.productid = row["productID"];
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
@@ -204,13 +205,13 @@ public:
 	Story[] DoneStories() {
 		Story[] stories;
 		auto rows = mysql.query(
-			"select ID, productID, title, cost, value
+			"select BIN_TO_UUID(ID, true) as ID, BIN_TO_UUID(productID, true) as productID, title, cost, value
 			from story
 			where done is NOT NULL;");
 		foreach (row; rows) {
 			Story story;
-			story.id = to!int(row["ID"]);
-			story.productid = to!int(row["productID"]);
+			story.id = row["ID"];
+			story.productid = row["productID"];
 			story.title = row["title"];
 			story.cost = to!int(row["cost"]);
 			story.value = to!int(row["value"]);
@@ -219,12 +220,12 @@ public:
 		return stories;
 	}
 
-	void CancelStory(int id) {
-		mysql.query("update story set cancelled=NOW() where ID=?;", id);
+	void CancelStory(string id) {
+		mysql.query("update story set cancelled=NOW() where ID=UUID_TO_BIN(?, true);", id);
 	}
 
-	void DoneStory(int id) {
-		mysql.query("update story set done=NOW() where ID=?;", id);
+	void DoneStory(string id) {
+		mysql.query("update story set done=NOW() where ID=UUID_TO_BIN(?, true);", id);
 	}
 
 	void StoreEvent(string uuid, string type, JSONValue data) {
@@ -335,7 +336,7 @@ public:
 		}
 	}
 
-	int PrepareProduct() {
+	string PrepareProduct() {
 		User user;
 		user.name = "somebody";
 		user.password = "password";
@@ -357,7 +358,7 @@ public:
 		};
 
 		tests["Saved_story_shows_up_in_backlog"] = function(StorageTest storagetest, Storage storage) {
-			int productid = storagetest.PrepareProduct();
+			auto productid = storagetest.PrepareProduct();
 
 			Story story;
 			story.productid = productid;
@@ -366,30 +367,21 @@ public:
 		};
 
 		tests["Story_can_be_updated"] = function(StorageTest storagetest, Storage storage) {
-			int productid = storagetest.PrepareProduct();
+			auto productid = storagetest.PrepareProduct();
 
 			Story story;
-			story.id = 0;
 			story.productid = productid;
 			storage.SaveStory(story);
-			Story story2;
-			story2.id = 0;
-			story2.productid = productid;
-			storage.SaveStory(story2);
-			assert(1 == storage.LoadBacklog()[0].id);
-			assert(2 == storage.LoadBacklog()[1].id);
+			Story[] stories = storage.LoadBacklog();
 
-			Story storyUpdate;
-			storyUpdate.id = 1;
-			storyUpdate.productid = productid;
-			storyUpdate.title = "Updated";
-			storage.SaveStory(storyUpdate);
-			assert(2 == storage.LoadBacklog().length);
+			stories[0].title = "Updated";
+			storage.SaveStory(stories[0]);
+			assert(1 == storage.LoadBacklog().length);
 			assert("Updated" == storage.LoadBacklog()[0].title);
 		};
 
 		tests["Cancelled_story_is_removed_from_backlog"] = function(StorageTest storagetest, Storage storage) {
-			int productid = storagetest.PrepareProduct();
+			auto productid = storagetest.PrepareProduct();
 
 			Story story;
 			story.productid = productid;
@@ -401,7 +393,7 @@ public:
 		};
 
 		tests["Done_story_is_removed_from_backlog"] = function(StorageTest storagetest, Storage storage) {
-			int productid = storagetest.PrepareProduct();
+			auto productid = storagetest.PrepareProduct();
 
 			Story story;
 			story.productid = productid;

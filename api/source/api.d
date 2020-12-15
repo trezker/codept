@@ -51,11 +51,11 @@ public:
 		return storage.DoneStories();
 	}
 
-	void CancelStory(int id) {
+	void CancelStory(string id) {
 		storage.CancelStory(id);
 	}
 
-	void DoneStory(int id) {
+	void DoneStory(string id) {
 		storage.DoneStory(id);
 	}
 

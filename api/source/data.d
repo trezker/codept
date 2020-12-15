@@ -1,8 +1,8 @@
 module codept.data;
 
 struct Story {
-	int id;
-	int productid;
+	string id;
+	string productid;
 	string title;
 	int cost;
 	int value;
@@ -29,7 +29,7 @@ struct MysqlParams {
 };
 
 struct Product {
-	int id;
+	string id;
 	string userid;
 	string title;
 };

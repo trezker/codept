@@ -14,7 +14,7 @@ public:
 
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
 		Story story;
-		story.id = req.json["id"].to!int;
+		story.id = req.json["id"].to!string;
 		story.title = req.json["title"].to!string;
 		story.cost = req.json["cost"].to!int;
 		story.value = req.json["value"].to!int;
@@ -50,7 +50,7 @@ public:
 	}
 
 	void CancelStory(HTTPServerRequest req, HTTPServerResponse res) {
-		int id = req.json["id"].to!int;
+		auto id = req.json["id"].to!string;
 
 		api.CancelStory(id);
 		Json json = Json.emptyObject;
@@ -59,7 +59,7 @@ public:
 	}
 
 	void DoneStory(HTTPServerRequest req, HTTPServerResponse res) {
-		int id = req.json["id"].to!int;
+		auto id = req.json["id"].to!string;
 
 		api.DoneStory(id);
 		Json json = Json.emptyObject;
