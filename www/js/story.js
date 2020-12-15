@@ -32,8 +32,8 @@ function Story() {
 	});
 
 	self.newStory = {
-		id: 0,
-		productID: 1,
+		id: "",
+		productID: "21546970-3f11-11eb-974a-0242c0a8b002",
 		title: "",
 		cost: 5,
 		value: 5
