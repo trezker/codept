@@ -144,15 +144,15 @@ public:
 	}
 
 	void SaveProduct(Product product) {
-		mysql.query("insert into product (userid, title) values (?, ?);", product.userid, product.title);
+		mysql.query("insert into product (userid, title) values (UUID_TO_BIN(?, true), ?);", product.userid, product.title);
 	}
 
 	Product[] ProductsByUser(string userid) {
 		Product[] products;
 		auto rows = mysql.query("
-			select ID, userID, title
+			select ID, BIN_TO_UUID(userID,true) as userID, title
 			from product
-			where userID = ?
+			where userID = UUID_TO_BIN(?, true)
 			order by title asc;", userid);
 		foreach (row; rows) {
 			Product product;
@@ -249,7 +249,7 @@ public:
 	}
 
 	User LoadUser(string id) {
-		auto rows = mysql.query("select ID, name from user where ID=?;", id);
+		auto rows = mysql.query("select BIN_TO_UUID(ID, true) as ID, name from user where ID=UUID_TO_BIN(?, true);", id);
 		User user;
 		foreach(row; rows) {
 			user.id = row["ID"];
@@ -260,7 +260,7 @@ public:
 	}
 
 	User UserByName(string name) {
-		auto rows = mysql.query("select ID, name from user where name=?;", name);
+		auto rows = mysql.query("select BIN_TO_UUID(ID, true) as ID, name from user where name=?;", name);
 		User user;
 		foreach(row; rows) {
 			user.id = row["ID"];
@@ -271,12 +271,12 @@ public:
 	}
 
 	string Login(User user) {
-		auto rows = mysql.query("select ID, password from user where name=?;", user.name);
+		auto rows = mysql.query("select BIN_TO_UUID(ID, true) as ID, password from user where name=?;", user.name);
 		foreach (row; rows) {
 			string hashedPassword = row["password"];
 			if(isSameHash(dupPassword(user.password), parseHash(hashedPassword))) {
 				string sessionid = randomToken();
-				mysql.query("insert into session(userid, sessionid) values(?, ?);", row["ID"], sessionid);
+				mysql.query("insert into session(userid, sessionid) values(UUID_TO_BIN(?, true), ?);", row["ID"], sessionid);
 				return sessionid;
 			}
 			return "";
@@ -289,7 +289,7 @@ public:
 	}
 
 	APISession LoadSession(string sessionid) {
-		auto rows = mysql.query("select ID, userID, sessionid from session where sessionid=?;", sessionid);
+		auto rows = mysql.query("select ID, BIN_TO_UUID(userID, true) as userID, sessionid from session where sessionid=?;", sessionid);
 		APISession session;
 		foreach (row; rows) {
 			session.id = to!int(row["ID"]);
