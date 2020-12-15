@@ -10,6 +10,10 @@ import dauth;
 
 import codept.data;
 
+//TODO: Make UUID a virtual text uuid for selection, use ID to do joins...
+//Code should only use UUID_TO_BIN on initial insert,
+//after that code doesn't need to convert back and forth because the virtual column can be used.
+
 class Storage {
 	Mysql mysql;
 public:
@@ -61,9 +65,10 @@ public:
 		mysql.query("
 			CREATE TABLE `event` (
 				`ID` bigint(20) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-				`occurred` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  				`occurred` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				`typeID` bigint(20) NOT NULL,
 				`objectID` binary(16) NOT NULL,
+				`objectUUID` varchar(36) COLLATE utf8mb4_unicode_ci GENERATED ALWAYS AS (bin_to_uuid(`objectID`)) VIRTUAL,
 				`data` json DEFAULT NULL,
 				CONSTRAINT `event_fk_type` FOREIGN KEY (`typeID`) REFERENCES `event_type` (`ID`) ON DELETE RESTRICT ON UPDATE RESTRICT
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -72,7 +77,8 @@ public:
 		mysql.query("
 			CREATE TABLE `user` (
 				`ID` binary(16) NOT NULL PRIMARY KEY,
-				`name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+				`UUID` varchar(36) COLLATE utf8mb4_unicode_ci GENERATED ALWAYS AS (bin_to_uuid(`ID`)) VIRTUAL,
+  				`name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
 				`password` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 		");
