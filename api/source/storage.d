@@ -15,27 +15,32 @@ class Storage {
 public:
 	this(MysqlParams params) {
 		mysql = new Mysql(params.url, to!int(params.port), params.user, params.password, params.database);
-		/*
-		auto rows = mysql.query("select ID, name, password from user where UUID is NULL;");
-		User user;
+
+/*
 		foreach(row; rows) {
-			auto uuid = Generate_UUID();
-
-			user.id = to!int(row["ID"]);
-			user.name = row["name"];
-			string password = row["password"];
-
-			JSONValue jj = [ "name": user.name ];
-			jj.object["password"] = JSONValue(password);
+			string uuid = row["ID"];
+			JSONValue jj = [ "productID": row["productID"] ];
+			jj.object["title"] = JSONValue(row["title"]);
+			jj.object["cost"] = JSONValue(row["cost"]);
+			jj.object["value"] = JSONValue(row["value"]);
 
 			mysql.query("
-				insert into event(typeID, UUID, data)
-				select ID, ?, ? from event_type where name = 'CreateUser';",
+				insert into event(typeID, objectID, data)
+				select ID, UUID_TO_BIN(?, true), ? from event_type where name = 'CreateStory';",
 				uuid,
 				jj.toString
 			);
-			break;
-		}*/
+
+			if(row["cancelled"] != null) {
+				mysql.query("
+					insert into event(typeID, objectID, occurred)
+					select ID, UUID_TO_BIN(?, true), ? from event_type where name = 'CancelStory';",
+					uuid,
+					row["cancelled"]
+				);
+			}
+			*/
+		}
 	}
 
 	string Generate_UUID() {
@@ -55,7 +60,15 @@ public:
 		");
 
 		mysql.query("
-			INSERT INTO `event_type` (`ID`, `name`) VALUES (1, 'CreateUser');
+			INSERT INTO
+				`event_type` (`ID`, `name`)
+			VALUES
+				(1, 'CreateUser'),
+				(2, 'CreateProduct'),
+				(3, 'CreateStory'),
+				(4, 'UpdateStory'),
+				(5, 'CancelStory'),
+				(6, 'DoneStory');
 		");
 
 		mysql.query("
