@@ -15,32 +15,6 @@ class Storage {
 public:
 	this(MysqlParams params) {
 		mysql = new Mysql(params.url, to!int(params.port), params.user, params.password, params.database);
-
-/*
-		foreach(row; rows) {
-			string uuid = row["ID"];
-			JSONValue jj = [ "productID": row["productID"] ];
-			jj.object["title"] = JSONValue(row["title"]);
-			jj.object["cost"] = JSONValue(row["cost"]);
-			jj.object["value"] = JSONValue(row["value"]);
-
-			mysql.query("
-				insert into event(typeID, objectID, data)
-				select ID, UUID_TO_BIN(?, true), ? from event_type where name = 'CreateStory';",
-				uuid,
-				jj.toString
-			);
-
-			if(row["cancelled"] != null) {
-				mysql.query("
-					insert into event(typeID, objectID, occurred)
-					select ID, UUID_TO_BIN(?, true), ? from event_type where name = 'CancelStory';",
-					uuid,
-					row["cancelled"]
-				);
-			}
-			*/
-		}
 	}
 
 	string Generate_UUID() {
@@ -143,12 +117,25 @@ public:
 	void SaveStory(Story story) {
 		if(story.id == "") {
 			auto uuid = Generate_UUID();
+
+			JSONValue data = [ "productID": story.productid ];
+			data.object["title"] = JSONValue(story.title);
+			data.object["cost"] = JSONValue(story.cost);
+			data.object["value"] = JSONValue(story.value);
+			StoreEvent(uuid, "CreateStory", data);
+
 			mysql.query(
 				"insert into story (ID, productID, title, cost, value) values (UUID_TO_BIN(?, true), UUID_TO_BIN(?, true), ?, ?, ?);",
 				uuid, story.productid, story.title, story.cost, story.value
 			);
 		}
 		else {
+			JSONValue data = [ "productID": story.productid ];
+			data.object["title"] = JSONValue(story.title);
+			data.object["cost"] = JSONValue(story.cost);
+			data.object["value"] = JSONValue(story.value);
+			StoreEvent(story.id, "UpdateStory", data);
+
 			mysql.query(
 				"update story set productID=UUID_TO_BIN(?, true), title=?, cost=?, value=? where ID=UUID_TO_BIN(?, true);",
 				story.productid, story.title, story.cost, story.value, story.id
@@ -158,6 +145,11 @@ public:
 
 	void SaveProduct(Product product) {
 		auto uuid = Generate_UUID();
+
+		JSONValue data = [ "userID": product.userid ];
+		data.object["title"] = JSONValue(product.title);
+		StoreEvent(uuid, "CreateProduct", data);
+
 		mysql.query("insert into product (ID, userID, title) values (UUID_TO_BIN(?, true), UUID_TO_BIN(?, true), ?);", uuid, product.userid, product.title);
 	}
 
@@ -234,10 +226,14 @@ public:
 	}
 
 	void CancelStory(string id) {
+		StoreEvent(id, "CancelStory");
+
 		mysql.query("update story set cancelled=NOW() where ID=UUID_TO_BIN(?, true);", id);
 	}
 
 	void DoneStory(string id) {
+		StoreEvent(id, "DoneStory");
+
 		mysql.query("update story set done=NOW() where ID=UUID_TO_BIN(?, true);", id);
 	}
 
@@ -247,6 +243,15 @@ public:
 			select ID, UUID_TO_BIN(?, true), ? from event_type where name = ?;",
 			uuid,
 			data.toString,
+			type
+		);
+	}
+
+	void StoreEvent(string uuid, string type) {
+		mysql.query("
+			insert into event(typeID, objectID)
+			select ID, UUID_TO_BIN(?, true) from event_type where name = ?;",
+			uuid,
 			type
 		);
 	}
