@@ -15,6 +15,7 @@ public:
 	void SaveStory(HTTPServerRequest req, HTTPServerResponse res) {
 		Story story;
 		story.id = req.json["id"].to!string;
+		story.productid = req.json["productID"].to!string;
 		story.title = req.json["title"].to!string;
 		story.cost = req.json["cost"].to!int;
 		story.value = req.json["value"].to!int;

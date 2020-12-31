@@ -1,5 +1,7 @@
 module codept.storage;
 
+import std.datetime;
+import std.format;
 import std.algorithm;
 import std.stdio;
 import std.file;
@@ -102,7 +104,6 @@ public:
 		mysql.query("truncate session;");
 		mysql.query("delete from user;");
 		mysql.query("truncate event;");
-		mysql.query("delete from event_type;");
 	}
 
 	void Dismantle() {
@@ -256,6 +257,28 @@ public:
 		);
 	}
 
+	Event[] EventsAfter(DateTime t) {
+		Event[] events;
+		string tf = format("%04s-%02s-%02s %02s:%02s:%02s",
+			(t.year),
+			to!(int)(t.month),
+			(t.day),
+			(t.hour),
+			(t.minute),
+			(t.second)
+		);
+		writeln("Time: " ~ tf);
+		//auto rows = mysql.query("select ID, BIN_TO_UUID(objectID, true) as objectID, occurred from event where occurred >= ?;", tf); //t.toISOExtString()
+		auto rows = mysql.query("select ID, BIN_TO_UUID(objectID, true) as objectID, occurred from event;");
+		foreach(row; rows) {
+			Event event;
+			event.occurred = row["occurred"];
+			writeln(event.occurred);
+			events ~= event;
+		}
+		return events;
+	}
+
 	void CreateUser(User user) {
 		auto uuid = Generate_UUID();
 		string hashedPassword = makeHash(dupPassword(user.password)).toString();
@@ -382,6 +405,20 @@ public:
 			story.productid = productid;
 			storage.SaveStory(story);
 			assert(1 == storage.LoadBacklog().length);
+		};
+
+		tests["Creating_story_generates_a_CreateStory_event"] = function(StorageTest storagetest, Storage storage) {
+			auto productid = storagetest.PrepareProduct();
+
+			auto pretime = to!DateTime(Clock.currTime());
+
+			Story story;
+			story.productid = productid;
+			storage.SaveStory(story);
+
+			Event[] events = storage.EventsAfter(pretime);
+			writeln(events.length);
+			//assert(1 == events.length);
 		};
 
 		tests["Story_can_be_updated"] = function(StorageTest storagetest, Storage storage) {

@@ -1,5 +1,15 @@
 module codept.data;
 
+import std.datetime;
+import std.json;
+
+struct Event {
+	int id;
+	string objectid;
+	string occurred;
+	JSONValue data;
+};
+
 struct Story {
 	string id;
 	string productid;
