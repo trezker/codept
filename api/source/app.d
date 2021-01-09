@@ -8,6 +8,14 @@ void index(HTTPServerRequest req, HTTPServerResponse res) {
 	res.writeBody(serializeToJsonString(json), 200);
 }
 
+void error(HTTPServerRequest req, HTTPServerResponse res, HTTPServerErrorInfo err) {
+	Json json = Json.emptyObject;
+	json["success"] = false;
+	res.writeBody(serializeToJsonString(json), 200);
+	auto f = File("/log/error.log", "a");
+	f.write(err.debugMessage ~ "\n\n");
+}
+
 void main() {
 	HTTPAPI httpapi = new HTTPAPI;
 
@@ -27,6 +35,7 @@ void main() {
 
 	auto settings = new HTTPServerSettings;
 	settings.sessionStore = new MemorySessionStore;
+	settings.errorPageHandler = toDelegate(&error);
 	settings.port = 8080;
 
 	listenHTTP(settings, router);

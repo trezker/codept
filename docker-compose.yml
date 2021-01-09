@@ -15,6 +15,7 @@ services:
     volumes:
       - ./api/api:/api
       - ./.env:/src/.env
+      - ./log:/log:Z
     env_file:
       .env
   phpmyadmin:
