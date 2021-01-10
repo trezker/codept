@@ -177,7 +177,7 @@ public:
 			select BIN_TO_UUID(ID, true) as ID, BIN_TO_UUID(productID, true) as productID, title, cost, value
 			from story
 			where cancelled is NULL and done is NULL
-			order by value-cost desc;");
+			order by value/cost desc;");
 		foreach (row; rows) {
 			Story story;
 			story.id = row["ID"];
