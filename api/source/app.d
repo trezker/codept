@@ -1,6 +1,7 @@
 import vibe.vibe;
 import std.stdio;
 import codept.httpapi;
+import codept.error;
 
 void index(HTTPServerRequest req, HTTPServerResponse res) {
 	Json json = Json.emptyObject;
@@ -13,7 +14,7 @@ void error(HTTPServerRequest req, HTTPServerResponse res, HTTPServerErrorInfo er
 	json["success"] = false;
 	res.writeBody(serializeToJsonString(json), 200);
 	auto f = File("/log/error.log", "a");
-	f.write(err.debugMessage ~ "\n\n");
+	f.write(DeclutterErrorLog(err.debugMessage) ~ "\n\n");
 }
 
 void main() {
@@ -43,3 +44,5 @@ void main() {
 	disableDefaultSignalHandlers();
 	runApplication();
 }
+
+

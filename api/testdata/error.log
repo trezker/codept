@@ -1,0 +1,23 @@
+mysql.mysql.MysqlDatabaseException@../../../.dub/packages/mysql-d-0.3.3/mysql-d/source/mysql/mysql.d(148): Incorrect string value: '' for function uuid_to_bin :::: insert into story (ID, productID, title, cost, value) values (UUID_TO_BIN('ff613093-56b1-11eb-9b64-0242c0a8b002', true), UUID_TO_BIN('', true), 'test', '5', '5');
+----------------
+/usr/include/dmd/phobos/std/exception.d:665 bool std.exception.enforceEx!(mysql.mysql.MysqlDatabaseException).enforceEx!(bool).enforceEx(bool, lazy immutable(char)[], immutable(char)[], ulong) [0x87490b]
+../../../.dub/packages/mysql-d-0.3.3/mysql-d/source/mysql/mysql.d:148 mysql.mysql_result.MysqlResult mysql.mysql.Mysql.queryImpl(immutable(char)[]) [0x86fa18]
+../../../.dub/packages/mysql-d-0.3.3/mysql-d/source/mysql/mysql.d:186 mysql.mysql_result.MysqlResult mysql.mysql.Mysql.query!(immutable(char)[], immutable(char)[], immutable(char)[], int, int).query(immutable(char)[], immutable(char)[], immutable(char)[], immutable(char)[], int, int) [0x85bb5f]
+source/storage.d:128 void codept.storage.Storage.SaveStory(codept.data.Story) [0x8507d7]
+source/api.d:39 void codept.api.API.SaveStory(codept.data.Story) [0x82fb39]
+source/httpapi.d:23 void codept.httpapi.HTTPAPI.SaveStory(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse) [0x84f7d4]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/router.d:274 @trusted void vibe.http.router.URLRouter.handlerDelegate!(void delegate(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse)).handlerDelegate(void delegate(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse)).__lambda3!(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse).__lambda3(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse) [0x84c734]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/router.d:218 @safe bool vibe.http.router.URLRouter.handleRequest(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse).__lambda4!(ulong, immutable(char)[][]).__lambda4(ulong, scope immutable(char)[][]) [0x90094f]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/router.d:674 const @safe bool vibe.http.router.MatchTree!(vibe.http.router.Route).MatchTree.doMatch(immutable(char)[], scope bool delegate(ulong, scope immutable(char)[][]) @safe) [0x9032de]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/router.d:607 @safe bool vibe.http.router.MatchTree!(vibe.http.router.Route).MatchTree.match(immutable(char)[], scope bool delegate(ulong, scope immutable(char)[][]) @safe) [0x902b0b]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/router.d:211 @safe void vibe.http.router.URLRouter.handleRequest(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse) [0x9005c4]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/server.d:2272 @safe bool vibe.http.server.handleRequest(vibe.internal.interfaceproxy.InterfaceProxy!(vibe.core.stream.Stream).InterfaceProxy, vibe.core.net.TCPConnection, vibe.http.server.HTTPServerContext, ref vibe.http.server.HTTPServerSettings, ref bool, scope stdx.allocator.IAllocator) [0x994f15]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/server.d:247 @trusted void vibe.http.server.handleHTTPConnection(vibe.core.net.TCPConnection, vibe.http.server.HTTPServerContext).__lambda4() [0x99318b]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/server.d:239 @safe void vibe.http.server.handleHTTPConnection(vibe.core.net.TCPConnection, vibe.http.server.HTTPServerContext) [0x992d9c]
+../../../.dub/packages/vibe-d-0.9.1/vibe-d/http/vibe/http/server.d:2028 nothrow @safe void vibe.http.server.listenHTTPPlain(vibe.http.server.HTTPServerSettings, void delegate(vibe.http.server.HTTPServerRequest, vibe.http.server.HTTPServerResponse) @safe).doListen(vibe.http.server.HTTPServerContext, bool, bool, bool, bool).__lambda6(vibe.core.net.TCPConnection) [0x90da32]
+../../../.dub/packages/vibe-core-1.10.0/vibe-core/source/vibe/core/task.d:696 void vibe.core.task.TaskFuncInfo.set!(void delegate(vibe.core.net.TCPConnection) @safe, vibe.core.net.TCPConnection).set(ref void delegate(vibe.core.net.TCPConnection) @safe, ref vibe.core.net.TCPConnection).callDelegate(ref vibe.core.task.TaskFuncInfo) [0xa823b2]
+../../../.dub/packages/vibe-core-1.10.0/vibe-core/source/vibe/core/task.d:717 void vibe.core.task.TaskFuncInfo.call() [0xa58a41]
+../../../.dub/packages/vibe-core-1.10.0/vibe-core/source/vibe/core/task.d:426 nothrow void vibe.core.task.TaskFiber.run() [0xa57d07]
+??:? void core.thread.context.Callable.opCall() [0xaf2f24]
+??:? fiber_entryPoint [0xb6c462]
+
